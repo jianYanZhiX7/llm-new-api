@@ -188,6 +188,7 @@ func main() {
 	// This will cause SSE not to work!!!
 	//server.Use(gzip.Gzip(gzip.DefaultCompression))
 	server.Use(middleware.RequestId())
+	server.Use(middleware.HostGuard())
 	server.Use(middleware.Version())
 	server.Use(middleware.I18n())
 	middleware.SetUpLogger(server)
@@ -204,20 +205,64 @@ func main() {
 		port = strconv.Itoa(*common.Port)
 	}
 
-	srv := &http.Server{
-		Addr:    ":" + port,
-		Handler: server,
+	tlsEnabled := false
+	certFile := os.Getenv("TLS_CERT_FILE")
+	keyFile := os.Getenv("TLS_KEY_FILE")
+	if certFile == "" {
+		certFile = "cert/www.aigotoken.com.pem"
+	}
+	if keyFile == "" {
+		keyFile = "cert/www.aigotoken.com.key"
+	}
+	if _, errCert := os.Stat(certFile); errCert == nil {
+		if _, errKey := os.Stat(keyFile); errKey == nil {
+			tlsEnabled = true
+		}
 	}
 
+	srv := &http.Server{
+		Handler: server,
+	}
+	if tlsEnabled {
+		srv.Addr = ":443"
+	} else {
+		srv.Addr = ":" + port
+	}
+
+	var redirectSrv *http.Server
+	if tlsEnabled {
+		redirectSrv = &http.Server{
+			Addr: ":80",
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				target := "https://" + r.Host + r.URL.RequestURI()
+				http.Redirect(w, r, target, http.StatusMovedPermanently)
+			}),
+		}
+	}
 	go func() {
+		if tlsEnabled {
+			if err := srv.ListenAndServeTLS(certFile, keyFile); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				common.FatalLog("failed to start HTTPS server: " + err.Error())
+			}
+			return
+		}
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			common.FatalLog("failed to start HTTP server: " + err.Error())
 		}
 	}()
 
+	if tlsEnabled {
+		common.SysLog("HTTP->HTTPS redirect server starting on :80")
+		go func() {
+			if err := redirectSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				common.FatalLog("failed to start redirect server: " + err.Error())
+			}
+		}()
+	}
+
 	time.Sleep(100 * time.Millisecond)
 
-	common.LogStartupSuccess(startTime, port)
+	common.LogStartupSuccess(startTime, port, tlsEnabled)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -230,6 +275,11 @@ func main() {
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		common.SysError(fmt.Sprintf("server forced to shutdown: %v", err))
+	}
+	if redirectSrv != nil {
+		if err := redirectSrv.Shutdown(ctx); err != nil {
+			common.SysError(fmt.Sprintf("redirect server forced to shutdown: %v", err))
+		}
 	}
 	// 内存中的看板数据保存入库，避免重启丢失未落库数据 (issue #5679)
 	if common.DataExportEnabled {
