@@ -325,6 +325,19 @@ export type BillingSettings = {
   // section (saved via /api/option/waffo-pancake/save).
   WaffoPancakeStoreID: string
   WaffoPancakeProductID: string
+  // Direct Alipay (PC website pay, certificate mode) - bypasses Epay.
+  AlipayDirectEnabled: boolean
+  AlipayDirectSandbox: boolean
+  AlipayDirectAppId: string
+  AlipayDirectPrivateKey: string
+  AlipayDirectAppCert: string
+  AlipayDirectPublicCert: string
+  AlipayDirectRootCert: string
+  AlipayDirectNotifyURL: string
+  AlipayDirectReturnURL: string
+  AlipayDirectSellerId: string
+  AlipayDirectUnitPrice: number
+  AlipayDirectMinTopUp: number
   'checkin_setting.enabled': boolean
   'checkin_setting.min_quota': number
   'checkin_setting.max_quota': number

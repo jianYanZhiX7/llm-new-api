@@ -22,6 +22,7 @@ import { describe, test } from 'node:test'
 import { PAYMENT_TYPES } from '../constants'
 import {
   dispatchSelectedPayment,
+  isAlipayDirectPayment,
   isStripePayment,
   isWaffoPayment,
   isWaffoPancakePayment,
@@ -34,6 +35,8 @@ describe('payment type classification', () => {
     assert.equal(isWaffoPancakePayment(PAYMENT_TYPES.WAFFO_PANCAKE), true)
     assert.equal(isWaffoPancakePayment(PAYMENT_TYPES.WAFFO), false)
     assert.equal(isStripePayment(PAYMENT_TYPES.STRIPE), true)
+    assert.equal(isAlipayDirectPayment(PAYMENT_TYPES.ALIPAY_DIRECT), true)
+    assert.equal(isAlipayDirectPayment(PAYMENT_TYPES.ALIPAY), false)
   })
 })
 
@@ -57,6 +60,10 @@ describe('payment dispatch', () => {
           calls.push('pancake')
           return false
         },
+        alipayDirect: async () => {
+          calls.push('alipayDirect')
+          return false
+        },
       }
     )
 
@@ -77,10 +84,41 @@ describe('payment dispatch', () => {
           return true
         },
         waffoPancake: async () => false,
+        alipayDirect: async () => false,
       }
     )
 
     assert.equal(success, false)
     assert.equal(called, false)
+  })
+
+  test('routes direct Alipay to its dedicated processor', async () => {
+    const calls: string[] = []
+    const success = await dispatchSelectedPayment(
+      { name: 'Alipay (Direct)', type: PAYMENT_TYPES.ALIPAY_DIRECT },
+      50,
+      null,
+      {
+        regular: async () => {
+          calls.push('regular')
+          return false
+        },
+        waffo: async () => {
+          calls.push('waffo')
+          return false
+        },
+        waffoPancake: async () => {
+          calls.push('pancake')
+          return false
+        },
+        alipayDirect: async (amount) => {
+          calls.push(`alipayDirect:${amount}`)
+          return true
+        },
+      }
+    )
+
+    assert.equal(success, true)
+    assert.deepEqual(calls, ['alipayDirect:50'])
   })
 })

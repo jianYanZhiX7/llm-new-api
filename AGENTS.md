@@ -6,7 +6,7 @@ DO NOT send optional commentary
 
 This is an AI API gateway/proxy built with Go. It aggregates 40+ upstream AI providers (OpenAI, Claude, Gemini, Azure, AWS Bedrock, etc.) behind a unified API, with user management, billing, rate limiting, and an admin dashboard.
 
-Code style: follow sound architecture, UNIX philosophy, and separation of concerns.
+Code style: Write code that exhibits sound architecture, follows the UNIX philosophy, and maintains a clear separation of concerns. Prefer creating new code files over modifying existing source code—this directly encourages architectural decoupling and reduces coupling between components.
 
 ## Tech Stack
 

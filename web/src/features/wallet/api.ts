@@ -39,6 +39,8 @@ import type {
   WaffoPaymentResponse,
   WaffoPancakePaymentRequest,
   WaffoPancakePaymentResponse,
+  AlipayDirectPaymentRequest,
+  AlipayDirectPaymentResponse,
 } from './types'
 
 // ============================================================================
@@ -176,6 +178,30 @@ export async function requestWaffoPancakePayment(
   request: WaffoPancakePaymentRequest
 ): Promise<WaffoPancakePaymentResponse> {
   const res = await api.post('/api/user/waffo-pancake/pay', request, {
+    skipBusinessError: true,
+  } as Record<string, unknown>)
+  return res.data
+}
+
+/**
+ * Calculate payment amount for direct Alipay payment
+ */
+export async function calculateAlipayDirectAmount(
+  request: AmountRequest
+): Promise<AmountResponse> {
+  const res = await api.post('/api/user/alipay-direct/amount', request, {
+    skipBusinessError: true,
+  } as Record<string, unknown>)
+  return res.data
+}
+
+/**
+ * Request direct Alipay payment (PC website pay)
+ */
+export async function requestAlipayDirectPayment(
+  request: AlipayDirectPaymentRequest
+): Promise<AlipayDirectPaymentResponse> {
+  const res = await api.post('/api/user/alipay-direct/pay', request, {
     skipBusinessError: true,
   } as Record<string, unknown>)
   return res.data

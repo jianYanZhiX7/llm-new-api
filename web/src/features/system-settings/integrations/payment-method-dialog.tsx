@@ -68,6 +68,7 @@ type PaymentMethodDialogProps = {
 
 const PAYMENT_TYPE_ICON_NAMES: Record<string, string> = {
   alipay: 'SiAlipay',
+  alipay_direct: 'SiAlipay',
   stripe: 'SiStripe',
   waffo_pancake: 'LuCreditCard',
   wxpay: 'SiWechat',
@@ -108,6 +109,12 @@ export function PaymentMethodDialog({
       label: 'Waffo Pancake (waffo_pancake)',
       name: 'Waffo Pancake',
       value: 'waffo_pancake',
+    },
+    {
+      iconName: 'SiAlipay',
+      label: `${t('Alipay Direct')} (alipay_direct)`,
+      name: t('Alipay Direct'),
+      value: 'alipay_direct',
     },
   ]
   const getPaymentTypeOption = (value: string) =>

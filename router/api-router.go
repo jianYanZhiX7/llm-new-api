@@ -61,6 +61,9 @@ func SetApiRouter(router *gin.Engine) {
 		// :env separates test vs prod URLs so the operator can register each
 		// in Pancake's matching webhook slot; handler enforces env match.
 		apiRouter.POST("/waffo-pancake/webhook/:env", anonymousRequestBodyLimit, controller.WaffoPancakeWebhook)
+		// Alipay 直连异步通知：支付宝服务器会以 POST form 形式调用此路径
+		apiRouter.POST("/alipay/webhook", anonymousRequestBodyLimit, controller.AlipayDirectNotify)
+		apiRouter.GET("/alipay/webhook", controller.AlipayDirectNotify)
 
 		// Universal secure verification routes
 		apiRouter.POST("/verify", middleware.UserAuth(), middleware.CriticalRateLimit(), middleware.DisableCache(), controller.UniversalVerify)
@@ -110,6 +113,8 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.POST("/waffo/pay", middleware.CriticalRateLimit(), controller.RequestWaffoPay)
 				selfRoute.POST("/waffo-pancake/amount", controller.RequestWaffoPancakeAmount)
 				selfRoute.POST("/waffo-pancake/pay", middleware.CriticalRateLimit(), controller.RequestWaffoPancakePay)
+				selfRoute.POST("/alipay-direct/amount", controller.RequestAlipayDirectAmount)
+				selfRoute.POST("/alipay-direct/pay", middleware.CriticalRateLimit(), controller.RequestAlipayDirectPay)
 				selfRoute.POST("/aff_transfer", controller.TransferAffQuota)
 				selfRoute.PUT("/setting", controller.UpdateUserSetting)
 

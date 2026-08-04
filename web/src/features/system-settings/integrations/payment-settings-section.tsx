@@ -79,6 +79,14 @@ import {
   WaffoSettingsSection,
   type WaffoSettingsValues,
 } from './waffo-settings-section'
+import {
+  AlipayDirectSettingsSection,
+  type AlipayDirectSettingsValues,
+} from './alipay-direct-settings-section'
+
+// AlipayDirect tab 是完全自包含的子组件，拥有自己的 form/schema/mutation。
+// 这里只透传 defaultValues；其字段不进入主 paymentSchema，避免耦合父级 form。
+type AlipayDirectDefaults = AlipayDirectSettingsValues
 
 function isHttpOriginUrl(value: string) {
   const trimmed = value.trim()
@@ -201,6 +209,7 @@ type PaymentSettingsSectionProps = {
   waffoPancakeDefaultValues: WaffoPancakeSettingsValues
   waffoPancakeProvisionedStoreID?: string
   waffoPancakeProvisionedProductID?: string
+  alipayDirectDefaultValues: AlipayDirectDefaults
   complianceDefaults: PaymentComplianceDefaults
 }
 
@@ -219,6 +228,7 @@ export function PaymentSettingsSection({
   waffoPancakeDefaultValues,
   waffoPancakeProvisionedStoreID,
   waffoPancakeProvisionedProductID,
+  alipayDirectDefaultValues,
   complianceDefaults,
 }: PaymentSettingsSectionProps) {
   const { t } = useTranslation()
@@ -877,13 +887,16 @@ export function PaymentSettingsSection({
           />
           <Tabs defaultValue='general' className='min-w-0'>
             <div className='overflow-x-auto pb-1'>
-              <TabsList className='grid min-w-[44rem] grid-cols-6'>
+              <TabsList className='grid min-w-[52rem] grid-cols-7'>
                 <TabsTrigger value='general'>{t('General')}</TabsTrigger>
                 <TabsTrigger value='epay'>Epay</TabsTrigger>
                 <TabsTrigger value='stripe'>{t('Stripe')}</TabsTrigger>
                 <TabsTrigger value='creem'>Creem</TabsTrigger>
                 <TabsTrigger value='waffo-pancake'>Waffo Pancake</TabsTrigger>
                 <TabsTrigger value='waffo'>Waffo</TabsTrigger>
+                <TabsTrigger value='alipay-direct'>
+                  {t('Alipay Direct')}
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -1624,6 +1637,17 @@ export function PaymentSettingsSection({
                 onValueChange={setWaffoValue}
                 payMethods={waffoPayMethods}
                 onPayMethodsChange={setWaffoPayMethods}
+              />
+            </TabsContent>
+
+            {/* AlipayDirect 是完全自包含的子组件，自带 form/schema/save 按钮，
+                不参与父级"Save all settings"批量提交，避免侵入主 paymentSchema。 */}
+            <TabsContent
+              value='alipay-direct'
+              className={paymentTabContentClassName}
+            >
+              <AlipayDirectSettingsSection
+                defaultValues={alipayDirectDefaultValues}
               />
             </TabsContent>
           </Tabs>
