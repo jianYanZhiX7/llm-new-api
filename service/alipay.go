@@ -211,6 +211,7 @@ func CreateAlipayPagePayment(ctx context.Context, in AlipayPagePayInput) (*Alipa
 			ProductCode:  "FAST_INSTANT_TRADE_PAY",
 			TimeoutExpress: in.Timeout,
 		},
+		QRPayMode: "2",
 	}
 
 	if setting.AlipayDirectSellerId != "" {
