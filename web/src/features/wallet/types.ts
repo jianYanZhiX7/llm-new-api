@@ -65,6 +65,13 @@ export type AlipayDirectPaymentResponse = ApiResponse<{
 }>
 
 /**
+ * Alipay direct payment status query response
+ */
+export type AlipayDirectQueryResponse = ApiResponse<{
+  status: 'success' | 'pending' | string
+}>
+
+/**
  * Creem product configuration
  */
 export interface CreemProduct {

@@ -287,6 +287,41 @@ func GenerateAlipayTradeNo(userID int) string {
 	return fmt.Sprintf("USR%dNO%s%d", userID, common.GetRandomString(6), time.Now().Unix())
 }
 
+// AlipayQueryResult 主动查询返回。
+type AlipayQueryResult struct {
+	TradeNo     string
+	OutTradeNo  string
+	TradeStatus string
+	TotalAmount string
+}
+
+// QueryAlipayTrade 调用 alipay.trade.query 主动查询订单状态。
+// 这是支付宝官方要求的异步通知兜底机制，防止因网络异常导致漏单。
+func QueryAlipayTrade(ctx context.Context, outTradeNo string) (*AlipayQueryResult, error) {
+	client, err := GetAlipayClient()
+	if err != nil {
+		return nil, err
+	}
+
+	rsp, err := client.TradeQuery(ctx, alipay.TradeQuery{
+		OutTradeNo: outTradeNo,
+	})
+	if err != nil {
+		return nil, &AlipayErr{Code: AlipayErrSignFailed, Msg: fmt.Sprintf("alipay.trade.query failed: %s", err.Error())}
+	}
+
+	if !rsp.IsSuccess() {
+		return nil, &AlipayErr{Code: AlipayErrVerifyFailed, Msg: fmt.Sprintf("alipay.trade.query: %s - %s", rsp.Code, rsp.SubMsg)}
+	}
+
+	return &AlipayQueryResult{
+		TradeNo:     rsp.TradeNo,
+		OutTradeNo:  rsp.OutTradeNo,
+		TradeStatus: string(rsp.TradeStatus),
+		TotalAmount: rsp.TotalAmount,
+	}, nil
+}
+
 // BuildAlipaySubject 生成订单标题。如果系统名称为空，回退到 "New API"。
 func BuildAlipaySubject(amount int64) string {
 	name := strings.TrimSpace(common.SystemName)

@@ -22,6 +22,11 @@ type AlipayDirectPayRequest struct {
 	Amount int64 `json:"amount"` // 充值数量（按显示类型解释：USD/CNY 单位 或 Tokens 数量）
 }
 
+// AlipayDirectQueryRequest 直连支付宝订单状态查询请求。
+type AlipayDirectQueryRequest struct {
+	TradeNo string `json:"trade_no"`
+}
+
 // RequestAlipayDirectAmount 预览应付金额，不创建订单。
 // POST /api/user/self/alipay-direct/amount
 func RequestAlipayDirectAmount(c *gin.Context) {
@@ -129,11 +134,27 @@ func RequestAlipayDirectPay(c *gin.Context) {
 	})
 	if err != nil {
 		logger.LogError(c.Request.Context(), "支付宝直连 拉起支付失败 user_id="+strconv.Itoa(id)+" trade_no="+tradeNo+" amount="+strconv.FormatInt(req.Amount, 10)+" error="+err.Error())
+		model.InsertPaymentAuditLog(&model.PaymentAuditLog{
+			TradeNo:   tradeNo,
+			EventType: model.PaymentAuditEventCreate,
+			Provider:  model.PaymentProviderAlipayDirect,
+			Status:    model.PaymentAuditStatusFailed,
+			Detail:    "拉起支付失败: " + err.Error(),
+			ClientIP:  c.ClientIP(),
+		})
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "拉起支付失败"})
 		return
 	}
 
 	logger.LogInfo(c.Request.Context(), "支付宝直连 充值订单创建成功 user_id="+strconv.Itoa(id)+" trade_no="+tradeNo+" amount="+strconv.FormatInt(req.Amount, 10)+" money="+formattedAmount)
+	model.InsertPaymentAuditLog(&model.PaymentAuditLog{
+		TradeNo:   tradeNo,
+		EventType: model.PaymentAuditEventCreate,
+		Provider:  model.PaymentProviderAlipayDirect,
+		Status:    model.PaymentAuditStatusSuccess,
+		Detail:    "订单创建成功 amount=" + strconv.FormatInt(req.Amount, 10) + " money=" + formattedAmount,
+		ClientIP:  c.ClientIP(),
+	})
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",
@@ -178,14 +199,34 @@ func AlipayDirectNotify(c *gin.Context) {
 		return
 	}
 
+	rawPayload := values.Encode()
+
 	notify, err := service.VerifyAlipayNotification(c.Request.Context(), values)
 	if err != nil {
 		logger.LogWarn(c.Request.Context(), "支付宝直连 webhook 验签失败 path="+c.Request.RequestURI+" client_ip="+c.ClientIP()+" error="+err.Error())
+		model.InsertPaymentAuditLog(&model.PaymentAuditLog{
+			TradeNo:    values.Get("out_trade_no"),
+			EventType:  model.PaymentAuditEventNotify,
+			Provider:   model.PaymentProviderAlipayDirect,
+			Status:     model.PaymentAuditStatusFailed,
+			RawPayload: rawPayload,
+			Detail:     "验签失败: " + err.Error(),
+			ClientIP:   c.ClientIP(),
+		})
 		c.String(http.StatusOK, "fail")
 		return
 	}
 
 	logger.LogInfo(c.Request.Context(), "支付宝直连 webhook 验签成功 trade_no="+notify.TradeNo+" out_trade_no="+notify.OutTradeNo+" trade_status="+notify.TradeStatus+" client_ip="+c.ClientIP())
+	model.InsertPaymentAuditLog(&model.PaymentAuditLog{
+		TradeNo:    notify.OutTradeNo,
+		EventType:  model.PaymentAuditEventNotify,
+		Provider:   model.PaymentProviderAlipayDirect,
+		Status:     model.PaymentAuditStatusInfo,
+		RawPayload: rawPayload,
+		Detail:     "验签成功 trade_status=" + notify.TradeStatus + " total_amount=" + notify.TotalAmount,
+		ClientIP:   c.ClientIP(),
+	})
 
 	if !service.IsAlipayTradeSuccess(notify.TradeStatus) {
 		logger.LogInfo(c.Request.Context(), "支付宝直连 webhook 忽略非成功状态 trade_no="+notify.TradeNo+" status="+notify.TradeStatus)
@@ -197,11 +238,27 @@ func AlipayDirectNotify(c *gin.Context) {
 	topUp := model.GetTopUpByTradeNo(notify.OutTradeNo)
 	if topUp == nil {
 		logger.LogWarn(c.Request.Context(), "支付宝直连 webhook 订单不存在 trade_no="+notify.OutTradeNo+" client_ip="+c.ClientIP())
+		model.InsertPaymentAuditLog(&model.PaymentAuditLog{
+			TradeNo:   notify.OutTradeNo,
+			EventType: model.PaymentAuditEventNotify,
+			Provider:  model.PaymentProviderAlipayDirect,
+			Status:    model.PaymentAuditStatusFailed,
+			Detail:    "订单不存在",
+			ClientIP:  c.ClientIP(),
+		})
 		c.String(http.StatusOK, "success")
 		return
 	}
 	if service.FormatAlipayAmount(topUp.Money) != notify.TotalAmount {
 		logger.LogWarn(c.Request.Context(), "支付宝直连 webhook 金额不匹配 trade_no="+notify.OutTradeNo+" expected="+service.FormatAlipayAmount(topUp.Money)+" got="+notify.TotalAmount+" client_ip="+c.ClientIP())
+		model.InsertPaymentAuditLog(&model.PaymentAuditLog{
+			TradeNo:   notify.OutTradeNo,
+			EventType: model.PaymentAuditEventNotify,
+			Provider:  model.PaymentProviderAlipayDirect,
+			Status:    model.PaymentAuditStatusFailed,
+			Detail:    "金额不匹配 expected=" + service.FormatAlipayAmount(topUp.Money) + " got=" + notify.TotalAmount,
+			ClientIP:  c.ClientIP(),
+		})
 		c.String(http.StatusOK, "success")
 		return
 	}
@@ -214,10 +271,144 @@ func AlipayDirectNotify(c *gin.Context) {
 		// 订单不存在 / 状态错误等业务错误也回 success，避免支付宝持续重试；
 		// 真正系统级错误（DB down）由 RechargeAlipayDirect 内部 SysError 上报
 		logger.LogError(c.Request.Context(), "支付宝直连 充值处理失败 trade_no="+notify.OutTradeNo+" out_trade_no="+notify.OutTradeNo+" error="+err.Error())
+		model.InsertPaymentAuditLog(&model.PaymentAuditLog{
+			TradeNo:   notify.OutTradeNo,
+			EventType: model.PaymentAuditEventRecharge,
+			Provider:  model.PaymentProviderAlipayDirect,
+			Status:    model.PaymentAuditStatusFailed,
+			Detail:    "充值处理失败: " + err.Error(),
+			ClientIP:  c.ClientIP(),
+		})
 		c.String(http.StatusOK, "success")
 		return
 	}
 
 	logger.LogInfo(c.Request.Context(), "支付宝直连 充值成功 trade_no="+notify.TradeNo+" out_trade_no="+notify.OutTradeNo+" total_amount="+notify.TotalAmount+" client_ip="+c.ClientIP())
+	model.InsertPaymentAuditLog(&model.PaymentAuditLog{
+		TradeNo:   notify.OutTradeNo,
+		EventType: model.PaymentAuditEventRecharge,
+		Provider:  model.PaymentProviderAlipayDirect,
+		Status:    model.PaymentAuditStatusSuccess,
+		Detail:    "充值成功 trade_no=" + notify.TradeNo + " total_amount=" + notify.TotalAmount,
+		ClientIP:  c.ClientIP(),
+	})
 	c.String(http.StatusOK, "success")
+}
+
+// QueryAlipayDirectPayStatus 主动查询支付宝订单状态，作为异步通知的兜底机制。
+// POST /api/user/self/alipay-direct/query
+//
+// 流程：
+//  1. 根据 trade_no 查找本地订单，校验归属
+//  2. 若本地订单已成功，直接返回
+//  3. 若本地订单仍为 Pending，调用 alipay.trade.query 向支付宝确认状态
+//  4. 若支付宝返回成功，执行加款（复用 webhook 的 LockOrder + RechargeAlipayDirect 流程）
+//  5. 返回当前订单状态
+func QueryAlipayDirectPayStatus(c *gin.Context) {
+	if !isAlipayDirectTopUpEnabled() {
+		common.ApiErrorI18n(c, i18n.MsgPaymentAlipayNotConfig)
+		return
+	}
+
+	var req AlipayDirectQueryRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.TradeNo == "" {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "缺少订单号"})
+		return
+	}
+
+	topUp := model.GetTopUpByTradeNo(req.TradeNo)
+	if topUp == nil || topUp.UserId != c.GetInt("id") {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "订单不存在"})
+		return
+	}
+	tradeNo := req.TradeNo
+
+	// 已成功，无需查询支付宝
+	if topUp.Status == common.TopUpStatusSuccess {
+		c.JSON(http.StatusOK, gin.H{"message": "success", "data": gin.H{"status": "success"}})
+		return
+	}
+
+	// 非待支付状态，直接返回当前状态
+	if topUp.Status != common.TopUpStatusPending {
+		c.JSON(http.StatusOK, gin.H{"message": "success", "data": gin.H{"status": topUp.Status}})
+		return
+	}
+
+	// 主动查询支付宝确认订单状态
+	queryResult, err := service.QueryAlipayTrade(c.Request.Context(), tradeNo)
+	if err != nil {
+		logger.LogWarn(c.Request.Context(), "支付宝直连 主动查询失败 trade_no="+tradeNo+" error="+err.Error())
+		model.InsertPaymentAuditLog(&model.PaymentAuditLog{
+			TradeNo:   tradeNo,
+			EventType: model.PaymentAuditEventQuery,
+			Provider:  model.PaymentProviderAlipayDirect,
+			Status:    model.PaymentAuditStatusFailed,
+			Detail:    "主动查询失败: " + err.Error(),
+			ClientIP:  c.ClientIP(),
+		})
+		c.JSON(http.StatusOK, gin.H{"message": "success", "data": gin.H{"status": "pending"}})
+		return
+	}
+
+	logger.LogInfo(c.Request.Context(), "支付宝直连 主动查询结果 trade_no="+tradeNo+" alipay_trade_no="+queryResult.TradeNo+" trade_status="+queryResult.TradeStatus)
+	model.InsertPaymentAuditLog(&model.PaymentAuditLog{
+		TradeNo:    tradeNo,
+		EventType:  model.PaymentAuditEventQuery,
+		Provider:   model.PaymentProviderAlipayDirect,
+		Status:     model.PaymentAuditStatusInfo,
+		RawPayload: "trade_no=" + queryResult.TradeNo + " trade_status=" + queryResult.TradeStatus + " total_amount=" + queryResult.TotalAmount,
+		Detail:     "主动查询完成",
+		ClientIP:   c.ClientIP(),
+	})
+
+	// 支付宝侧未支付成功，返回待支付
+	if !service.IsAlipayTradeSuccess(queryResult.TradeStatus) {
+		c.JSON(http.StatusOK, gin.H{"message": "success", "data": gin.H{"status": "pending"}})
+		return
+	}
+
+	// 校验金额一致性
+	if service.FormatAlipayAmount(topUp.Money) != queryResult.TotalAmount {
+		logger.LogWarn(c.Request.Context(), "支付宝直连 主动查询金额不匹配 trade_no="+tradeNo+" expected="+service.FormatAlipayAmount(topUp.Money)+" got="+queryResult.TotalAmount)
+		model.InsertPaymentAuditLog(&model.PaymentAuditLog{
+			TradeNo:   tradeNo,
+			EventType: model.PaymentAuditEventQuery,
+			Provider:  model.PaymentProviderAlipayDirect,
+			Status:    model.PaymentAuditStatusFailed,
+			Detail:    "金额不匹配 expected=" + service.FormatAlipayAmount(topUp.Money) + " got=" + queryResult.TotalAmount,
+			ClientIP:  c.ClientIP(),
+		})
+		c.JSON(http.StatusOK, gin.H{"message": "success", "data": gin.H{"status": "pending"}})
+		return
+	}
+
+	// 支付宝侧已支付成功，执行加款
+	LockOrder(tradeNo)
+	defer UnlockOrder(tradeNo)
+
+	if err := model.RechargeAlipayDirect(tradeNo, c.ClientIP()); err != nil {
+		logger.LogError(c.Request.Context(), "支付宝直连 主动查询加款失败 trade_no="+tradeNo+" error="+err.Error())
+		model.InsertPaymentAuditLog(&model.PaymentAuditLog{
+			TradeNo:   tradeNo,
+			EventType: model.PaymentAuditEventRecharge,
+			Provider:  model.PaymentProviderAlipayDirect,
+			Status:    model.PaymentAuditStatusFailed,
+			Detail:    "主动查询加款失败: " + err.Error(),
+			ClientIP:  c.ClientIP(),
+		})
+		c.JSON(http.StatusOK, gin.H{"message": "success", "data": gin.H{"status": "pending"}})
+		return
+	}
+
+	logger.LogInfo(c.Request.Context(), "支付宝直连 主动查询加款成功 trade_no="+tradeNo+" alipay_trade_no="+queryResult.TradeNo)
+	model.InsertPaymentAuditLog(&model.PaymentAuditLog{
+		TradeNo:   tradeNo,
+		EventType: model.PaymentAuditEventRecharge,
+		Provider:  model.PaymentProviderAlipayDirect,
+		Status:    model.PaymentAuditStatusSuccess,
+		Detail:    "主动查询加款成功 alipay_trade_no=" + queryResult.TradeNo,
+		ClientIP:  c.ClientIP(),
+	})
+	c.JSON(http.StatusOK, gin.H{"message": "success", "data": gin.H{"status": "success"}})
 }

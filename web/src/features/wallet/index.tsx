@@ -109,8 +109,6 @@ export function Wallet(props: WalletProps) {
   const { processing: waffoProcessing, processWaffoPayment } = useWaffoPayment()
   const { processing: pancakeProcessing, processWaffoPancakePayment } =
     useWaffoPancakePayment()
-  const { processing: alipayDirectProcessing, processAlipayDirectPayment } =
-    useAlipayDirectPayment()
 
   // Fetch and refresh user data
   const fetchUser = useCallback(async () => {
@@ -127,6 +125,9 @@ export function Wallet(props: WalletProps) {
       setUserLoading(false)
     }
   }, [])
+
+  const { processing: alipayDirectProcessing, processAlipayDirectPayment } =
+    useAlipayDirectPayment(fetchUser)
 
   useEffect(() => {
     fetchUser()

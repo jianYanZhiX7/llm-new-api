@@ -41,6 +41,25 @@ web/           — Frontend (React 19, Rsbuild, Base UI, Tailwind)
   src/i18n/    — Frontend internationalization (i18next, en/zh/zh-TW/fr/ru/ja/vi)
 ```
 
+## Database Tables
+
+All tables are registered via GORM `AutoMigrate` in `model/main.go` and work across SQLite, MySQL, and PostgreSQL. The authoritative schema reference is `docs/database-schema.md`.
+
+| Module | Tables |
+| --- | --- |
+| Users & auth | `users`, `user_sessions`, `auth_flows`, `two_fas`, `two_fa_backup_codes`, `passkey_credentials`, `external_identity_claims`, `user_oauth_bindings`, `custom_oauth_providers` |
+| Channels & routing | `channels`, `abilities`, `vendors`, `models`, `prefill_groups` |
+| Tokens & billing | `tokens`, `logs`, `quota_data`, `top_ups`, `redemptions`, `checkins` |
+| Subscriptions | `subscription_plans`, `subscription_orders`, `user_subscriptions`, `subscription_pre_consume_records` |
+| Async tasks | `midjourneys`, `tasks` |
+| System ops | `options`, `setups`, `system_tasks`, `system_task_locks`, `system_instances`, `perf_metrics` |
+| Permissions | `casbin_rule`, `authz_roles` |
+
+Notes:
+- `logs` may live in a separate LOG_DB (including ClickHouse, which uses raw `CREATE TABLE` with TTL instead of GORM AutoMigrate).
+- `gorm:"-:all"` fields are not persisted; `json:"-"` fields are persisted but not returned to the frontend.
+- Soft delete via `gorm.DeletedAt` adds an implicit `deleted_at IS NULL` filter; unique indexes that must coexist with soft deletion use composite definitions including `deleted_at`.
+
 ## Internationalization (i18n)
 
 ### Backend (`i18n/`)

@@ -208,6 +208,18 @@ export async function requestAlipayDirectPayment(
 }
 
 /**
+ * Query direct Alipay payment status (polling fallback)
+ */
+export async function queryAlipayDirectPayment(
+  tradeNo: string
+): Promise<{ message: string; data: { status: string } }> {
+  const res = await api.post('/api/user/alipay-direct/query', {
+    trade_no: tradeNo,
+  })
+  return res.data
+}
+
+/**
  * Get affiliate code
  */
 export async function getAffiliateCode(): Promise<AffiliateCodeResponse> {

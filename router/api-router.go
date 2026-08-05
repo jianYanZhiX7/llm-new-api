@@ -115,6 +115,7 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.POST("/waffo-pancake/pay", middleware.CriticalRateLimit(), controller.RequestWaffoPancakePay)
 				selfRoute.POST("/alipay-direct/amount", controller.RequestAlipayDirectAmount)
 				selfRoute.POST("/alipay-direct/pay", middleware.CriticalRateLimit(), controller.RequestAlipayDirectPay)
+				selfRoute.POST("/alipay-direct/query", middleware.PaymentQueryRateLimit(), controller.QueryAlipayDirectPayStatus)
 				selfRoute.POST("/aff_transfer", controller.TransferAffQuota)
 				selfRoute.PUT("/setting", controller.UpdateUserSetting)
 
