@@ -1,7 +1,31 @@
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth-store'
+
+interface OAuthClientInfo {
+  displayName: string
+  tokenName: string
+  redirectUri: string
+}
+
+const oauthClients: Record<string, OAuthClientInfo> = {
+  'claude-desktop-app': {
+    displayName: 'Claude Desktop App',
+    tokenName: 'Claude-Code',
+    redirectUri: 'http://127.0.0.1:30080/api/aigotoken/callback',
+  },
+  deepchat: {
+    displayName: 'DeepChat',
+    tokenName: 'DeepChat',
+    redirectUri: 'http://localhost:1456/oauth/aigotoken/callback',
+  },
+}
+
+const defaultClientInfo: OAuthClientInfo = {
+  displayName: '未知应用',
+  tokenName: 'API Token',
+}
 
 export const Route = createFileRoute('/oauth/authorize')({
   component: OAuthAuthorizePage,
@@ -19,6 +43,11 @@ function OAuthAuthorizePage() {
   const codeChallenge = search.code_challenge
   const codeChallengeMethod = search.code_challenge_method
   const state = search.state
+
+  const clientInfo = useMemo(() => {
+    if (!clientId) return defaultClientInfo
+    return oauthClients[clientId] || defaultClientInfo
+  }, [clientId])
 
   useEffect(() => {
     if (user) return
@@ -56,6 +85,12 @@ function OAuthAuthorizePage() {
 
   const handleCancel = () => {
     if (redirectUri) {
+      const expectedUri = clientInfo !== defaultClientInfo ? oauthClients[clientId]?.redirectUri : null
+      if (expectedUri && redirectUri !== expectedUri) {
+        setStatus('error')
+        setError('非法的 redirect_uri')
+        return
+      }
       const cb = new URL(redirectUri)
       cb.searchParams.set('error', 'access_denied')
       if (state) cb.searchParams.set('state', state)
@@ -86,7 +121,7 @@ function OAuthAuthorizePage() {
             </svg>
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">Claude Desktop App</h1>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">{clientInfo.displayName}</h1>
             <p className="text-xs text-gray-500 dark:text-zinc-400">请求访问你的账户</p>
           </div>
         </div>
@@ -94,7 +129,7 @@ function OAuthAuthorizePage() {
         <div className="mb-6 space-y-2 text-sm text-gray-600 dark:text-zinc-300">
           <p>
             <span className="font-medium text-gray-900 dark:text-zinc-100">{user.display_name || user.username}</span>，
-            Claude Desktop App 希望创建一个名为 <code className="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-zinc-800">Claude-Code</code> 的 API 令牌用于访问模型 API。
+            {clientInfo.displayName} 希望创建一个名为 <code className="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-zinc-800">{clientInfo.tokenName}</code> 的 API 令牌用于访问模型 API。
           </p>
           <ul className="list-disc space-y-1 pl-5 text-xs text-gray-500 dark:text-zinc-400">
             <li>无限额度、永不过期、不限模型</li>

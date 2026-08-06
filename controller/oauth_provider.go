@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
@@ -16,11 +17,27 @@ import (
 )
 
 const (
-	oauthProviderClientID    = "claude-desktop-app"
-	oauthProviderRedirectURI = "http://127.0.0.1:30080/api/aigotoken/callback"
-	oauthProviderTokenName   = "Claude-Code"
-	oauthProviderCodeTTL     = 5 * time.Minute
+	oauthProviderCodeTTL = 5 * time.Minute
 )
+
+type oauthProviderClient struct {
+	RedirectURI string
+	TokenName   string
+	DisplayName string
+}
+
+var oauthProviderClients = map[string]oauthProviderClient{
+	"claude-desktop-app": {
+		RedirectURI: "http://127.0.0.1:30080/api/aigotoken/callback",
+		TokenName:   "Claude-Code",
+		DisplayName: "Claude Desktop App",
+	},
+	"deepchat": {
+		RedirectURI: "http://localhost:1456/oauth/aigotoken/callback",
+		TokenName:   "DeepChat",
+		DisplayName: "DeepChat",
+	},
+}
 
 type oauthProviderAuthorizeRequest struct {
 	ClientID            string `json:"client_id"`
@@ -45,16 +62,21 @@ func OAuthProviderAuthorize(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "invalid request body"})
 		return
 	}
-	if req.ClientID != oauthProviderClientID {
+	client, exists := oauthProviderClients[req.ClientID]
+	if !exists {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "invalid client_id"})
 		return
 	}
-	if req.RedirectURI != oauthProviderRedirectURI {
+	if req.RedirectURI != client.RedirectURI {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "invalid redirect_uri"})
 		return
 	}
 	if req.CodeChallengeMethod != "S256" || req.CodeChallenge == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "pkce code_challenge (S256) required"})
+		return
+	}
+	if req.ResponseType != "code" {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "unsupported response_type"})
 		return
 	}
 	if req.State == "" {
@@ -68,7 +90,7 @@ func OAuthProviderAuthorize(c *gin.Context) {
 		return
 	}
 
-	token, err := findOrCreateOAuthProviderToken(userId)
+	token, err := findOrCreateOAuthProviderToken(userId, client.TokenName)
 	if err != nil {
 		common.SysLog("oauth_provider: find-or-create token failed: " + err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "token creation failed"})
@@ -90,7 +112,7 @@ func OAuthProviderAuthorize(c *gin.Context) {
 	expiresAt := time.Now().Add(oauthProviderCodeTTL)
 	code, _, err := model.CreateAuthFlow(model.AuthFlowCreate{
 		Purpose:   model.AuthFlowPurposeOAuthProvider,
-		Provider:  oauthProviderClientID,
+		Provider:  req.ClientID,
 		UserId:    userId,
 		Payload:   string(payload),
 		ExpiresAt: expiresAt,
@@ -110,8 +132,12 @@ func OAuthProviderAuthorize(c *gin.Context) {
 	})
 }
 
-func findOrCreateOAuthProviderToken(userId int) (*model.Token, error) {
-	existing, err := model.FindUserTokenByName(userId, oauthProviderTokenName)
+var oauthProviderTokenMu sync.Mutex
+
+func findOrCreateOAuthProviderToken(userId int, tokenName string) (*model.Token, error) {
+	oauthProviderTokenMu.Lock()
+	defer oauthProviderTokenMu.Unlock()
+	existing, err := model.FindUserTokenByName(userId, tokenName)
 	if err == nil && existing != nil {
 		if existing.Status != 1 {
 			existing.Status = 1
@@ -132,7 +158,7 @@ func findOrCreateOAuthProviderToken(userId int) (*model.Token, error) {
 	now := common.GetTimestamp()
 	token := &model.Token{
 		UserId:         userId,
-		Name:           oauthProviderTokenName,
+		Name:           tokenName,
 		Key:            key,
 		Status:         1,
 		CreatedTime:    now,
@@ -165,11 +191,12 @@ func OAuthProviderToken(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "unsupported grant_type"})
 		return
 	}
-	if req.ClientID != oauthProviderClientID {
+	client, exists := oauthProviderClients[req.ClientID]
+	if !exists {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "invalid client_id"})
 		return
 	}
-	if req.RedirectURI != oauthProviderRedirectURI {
+	if req.RedirectURI != client.RedirectURI {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "invalid redirect_uri"})
 		return
 	}
@@ -180,7 +207,7 @@ func OAuthProviderToken(c *gin.Context) {
 
 	flow, err := model.ConsumeAuthFlow(req.Code, model.AuthFlowMatch{
 		Purpose:  model.AuthFlowPurposeOAuthProvider,
-		Provider: oauthProviderClientID,
+		Provider: req.ClientID,
 	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "invalid or expired code"})
@@ -215,6 +242,9 @@ func OAuthProviderToken(c *gin.Context) {
 
 func verifyPKCE(verifier, challenge string) bool {
 	if verifier == "" || challenge == "" {
+		return false
+	}
+	if len(verifier) < 43 || len(verifier) > 128 {
 		return false
 	}
 	sum := sha256.Sum256([]byte(verifier))
