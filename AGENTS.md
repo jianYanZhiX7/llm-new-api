@@ -6,6 +6,8 @@ DO NOT send optional commentary
 
 This is an AI API gateway/proxy built with Go. It aggregates 40+ upstream AI providers (OpenAI, Claude, Gemini, Azure, AWS Bedrock, etc.) behind a unified API, with user management, billing, rate limiting, and an admin dashboard.
 
+Code style: Write code that exhibits sound architecture, follows the UNIX philosophy, and maintains a clear separation of concerns. Prefer creating new code files over modifying existing source code—this directly encourages architectural decoupling and reduces coupling between components.
+
 ## Tech Stack
 
 - **Backend**: Go 1.22+, Gin web framework, GORM v2 ORM
@@ -38,6 +40,25 @@ pkg/           — Internal packages (cachex, ionet)
 web/           — Frontend (React 19, Rsbuild, Base UI, Tailwind)
   src/i18n/    — Frontend internationalization (i18next, en/zh/zh-TW/fr/ru/ja/vi)
 ```
+
+## Database Tables
+
+All tables are registered via GORM `AutoMigrate` in `model/main.go` and work across SQLite, MySQL, and PostgreSQL. The authoritative schema reference is `docs/database-schema.md`.
+
+| Module | Tables |
+| --- | --- |
+| Users & auth | `users`, `user_sessions`, `auth_flows`, `two_fas`, `two_fa_backup_codes`, `passkey_credentials`, `external_identity_claims`, `user_oauth_bindings`, `custom_oauth_providers` |
+| Channels & routing | `channels`, `abilities`, `vendors`, `models`, `prefill_groups` |
+| Tokens & billing | `tokens`, `logs`, `quota_data`, `top_ups`, `redemptions`, `checkins` |
+| Subscriptions | `subscription_plans`, `subscription_orders`, `user_subscriptions`, `subscription_pre_consume_records` |
+| Async tasks | `midjourneys`, `tasks` |
+| System ops | `options`, `setups`, `system_tasks`, `system_task_locks`, `system_instances`, `perf_metrics` |
+| Permissions | `casbin_rule`, `authz_roles` |
+
+Notes:
+- `logs` may live in a separate LOG_DB (including ClickHouse, which uses raw `CREATE TABLE` with TTL instead of GORM AutoMigrate).
+- `gorm:"-:all"` fields are not persisted; `json:"-"` fields are persisted but not returned to the frontend.
+- Soft delete via `gorm.DeletedAt` adds an implicit `deleted_at IS NULL` filter; unique indexes that must coexist with soft deletion use composite definitions including `deleted_at`.
 
 ## Internationalization (i18n)
 

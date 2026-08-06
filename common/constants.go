@@ -218,6 +218,10 @@ var (
 	SearchRateLimitEnable         = true
 	SearchRateLimitNum            = 10
 	SearchRateLimitDuration int64 = 60
+
+	// Per-user payment query rate limit (applies after authentication, keyed by user ID)
+	PaymentQueryRateLimitNum            = 120
+	PaymentQueryRateLimitDuration int64 = 5 * 60
 )
 
 var RateLimitKeyExpirationDuration = 20 * time.Minute

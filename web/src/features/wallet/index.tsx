@@ -41,6 +41,7 @@ import {
   useCreemPayment,
   useWaffoPayment,
   useWaffoPancakePayment,
+  useAlipayDirectPayment,
 } from './hooks'
 import {
   getDefaultPaymentType,
@@ -125,6 +126,9 @@ export function Wallet(props: WalletProps) {
     }
   }, [])
 
+  const { processing: alipayDirectProcessing, processAlipayDirectPayment } =
+    useAlipayDirectPayment(fetchUser)
+
   useEffect(() => {
     fetchUser()
   }, [fetchUser])
@@ -202,6 +206,7 @@ export function Wallet(props: WalletProps) {
         regular: processPayment,
         waffo: processWaffoPayment,
         waffoPancake: processWaffoPancakePayment,
+        alipayDirect: processAlipayDirectPayment,
       }
     )
 
@@ -360,7 +365,7 @@ export function Wallet(props: WalletProps) {
         paymentAmount={paymentAmount}
         paymentMethod={selectedPaymentMethod}
         calculating={calculating}
-        processing={processing || waffoProcessing || pancakeProcessing}
+        processing={processing || waffoProcessing || pancakeProcessing || alipayDirectProcessing}
         discountRate={getDiscountRate()}
         usdExchangeRate={effectiveUsdExchangeRate}
       />

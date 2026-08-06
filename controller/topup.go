@@ -95,12 +95,46 @@ func GetTopUpInfo(c *gin.Context) {
 		}
 	}
 
+	// 如果启用了直连支付宝，添加到支付方法列表（type=alipay_direct 与 Epay 的 alipay 区分）
+	enableAlipayDirect := isAlipayDirectTopUpEnabled()
+	if enableAlipayDirect {
+		hasAlipayDirect := false
+		for _, method := range payMethods {
+			if method["type"] == model.PaymentMethodAlipayDirect {
+				hasAlipayDirect = true
+				break
+			}
+		}
+		if !hasAlipayDirect {
+			payMethods = append(payMethods, map[string]string{
+				"name":      "支付宝",
+				"type":      model.PaymentMethodAlipayDirect,
+				"icon":      "SiAlipay",
+				"color":     "#1677FF",
+				"min_topup": strconv.Itoa(setting.AlipayDirectMinTopUp),
+			})
+		}
+
+		// 直连支付宝启用后，隐藏 Epay 聚合的支付宝和微信，
+		// 避免支付方式列表中出现重复的支付宝选项
+		filtered := make([]map[string]string, 0, len(payMethods))
+		for _, method := range payMethods {
+			t := method["type"]
+			if t == "alipay" || t == "wxpay" {
+				continue
+			}
+			filtered = append(filtered, method)
+		}
+		payMethods = filtered
+	}
+
 	data := gin.H{
 		"enable_online_topup":              isEpayTopUpEnabled(),
 		"enable_stripe_topup":              isStripeTopUpEnabled(),
 		"enable_creem_topup":               isCreemTopUpEnabled(),
 		"enable_waffo_topup":               enableWaffo,
 		"enable_waffo_pancake_topup":       enableWaffoPancake,
+		"enable_alipay_direct_topup":       enableAlipayDirect,
 		"enable_redemption":                complianceConfirmed,
 		"payment_compliance_confirmed":     complianceConfirmed,
 		"payment_compliance_terms_version": operation_setting.CurrentComplianceTermsVersion,
@@ -110,15 +144,17 @@ func GetTopUpInfo(c *gin.Context) {
 			}
 			return nil
 		}(),
-		"creem_products":          setting.CreemProducts,
-		"pay_methods":             payMethods,
-		"min_topup":               operation_setting.MinTopUp,
-		"stripe_min_topup":        setting.StripeMinTopUp,
-		"waffo_min_topup":         setting.WaffoMinTopUp,
-		"waffo_pancake_min_topup": setting.WaffoPancakeMinTopUp,
-		"amount_options":          operation_setting.GetPaymentSetting().AmountOptions,
-		"discount":                operation_setting.GetPaymentSetting().AmountDiscount,
-		"topup_link":              common.TopUpLink,
+		"creem_products":           setting.CreemProducts,
+		"pay_methods":               payMethods,
+		"min_topup":                 operation_setting.MinTopUp,
+		"stripe_min_topup":          setting.StripeMinTopUp,
+		"waffo_min_topup":           setting.WaffoMinTopUp,
+		"waffo_pancake_min_topup":   setting.WaffoPancakeMinTopUp,
+		"alipay_direct_min_topup":   setting.AlipayDirectMinTopUp,
+		"alipay_direct_unit_price":  setting.AlipayDirectUnitPrice,
+		"amount_options":             operation_setting.GetPaymentSetting().AmountOptions,
+		"discount":                   operation_setting.GetPaymentSetting().AmountDiscount,
+		"topup_link":                 common.TopUpLink,
 	}
 	common.ApiSuccess(c, data)
 }

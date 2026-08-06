@@ -51,7 +51,7 @@ export type WaffoPancakePaymentResponse = ApiResponse<
       session_id?: string
       expires_at?: number | string
       order_id?: string
-      // Self-service session token + expiry — surfaced by the backend so
+      // Self-service session token + expiry - surfaced by the backend so
       // future flows (refund / cancel from new-api's own UI) can use them
       // without re-issuing checkout. Not consumed by the current handler.
       token?: string
@@ -59,6 +59,17 @@ export type WaffoPancakePaymentResponse = ApiResponse<
     }
   | string
 >
+export type AlipayDirectPaymentResponse = ApiResponse<{
+  pay_url: string
+  order_id?: string
+}>
+
+/**
+ * Alipay direct payment status query response
+ */
+export type AlipayDirectQueryResponse = ApiResponse<{
+  status: 'success' | 'pending' | string
+}>
 
 /**
  * Creem product configuration
@@ -150,6 +161,10 @@ export interface TopupInfo {
   enable_waffo_pancake_topup?: boolean
   /** Minimum topup amount for Waffo Pancake */
   waffo_pancake_min_topup?: number
+  /** Whether direct Alipay topup is enabled */
+  enable_alipay_direct_topup?: boolean
+  /** Minimum topup amount for direct Alipay */
+  alipay_direct_min_topup?: number
   /** Whether redemption code usage is enabled */
   enable_redemption?: boolean
   /** Whether compliance confirmation has been completed */
@@ -200,6 +215,14 @@ export interface WaffoPaymentRequest {
  * Waffo Pancake payment request parameters
  */
 export interface WaffoPancakePaymentRequest {
+  /** Topup amount */
+  amount: number
+}
+
+/**
+ * Direct Alipay payment request parameters
+ */
+export interface AlipayDirectPaymentRequest {
   /** Topup amount */
   amount: number
 }

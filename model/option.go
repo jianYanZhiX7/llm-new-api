@@ -116,6 +116,16 @@ func InitOptionMap() {
 	common.OptionMap["WaffoPancakeMinTopUp"] = strconv.Itoa(setting.WaffoPancakeMinTopUp)
 	common.OptionMap["WaffoPancakeStoreID"] = setting.WaffoPancakeStoreID
 	common.OptionMap["WaffoPancakeProductID"] = setting.WaffoPancakeProductID
+	common.OptionMap["AlipayDirectEnabled"] = strconv.FormatBool(setting.AlipayDirectEnabled)
+	common.OptionMap["AlipayDirectSandbox"] = strconv.FormatBool(setting.AlipayDirectSandbox)
+	common.OptionMap["AlipayDirectAppId"] = setting.AlipayDirectAppId
+	// AlipayDirectPrivateKey / AppCert / PublicCert / RootCert 从 cert/alipay/ 文件加载，
+	// 不通过 option 系统管理，禁止在 Web UI 中修改。
+	common.OptionMap["AlipayDirectNotifyURL"] = setting.AlipayDirectNotifyURL
+	common.OptionMap["AlipayDirectReturnURL"] = setting.AlipayDirectReturnURL
+	common.OptionMap["AlipayDirectSellerId"] = setting.AlipayDirectSellerId
+	common.OptionMap["AlipayDirectUnitPrice"] = strconv.FormatFloat(setting.AlipayDirectUnitPrice, 'f', -1, 64)
+	common.OptionMap["AlipayDirectMinTopUp"] = strconv.Itoa(setting.AlipayDirectMinTopUp)
 	common.OptionMap["TopupGroupRatio"] = common.TopupGroupRatio2JSONString()
 	common.OptionMap["Chats"] = setting.Chats2JsonString()
 	common.OptionMap["AutoGroups"] = setting.AutoGroups2JsonString()
@@ -495,6 +505,24 @@ func updateOptionMap(key string, value string) (err error) {
 		setting.WaffoPancakeUnitPrice, _ = strconv.ParseFloat(value, 64)
 	case "WaffoPancakeMinTopUp":
 		setting.WaffoPancakeMinTopUp, _ = strconv.Atoi(value)
+	case "AlipayDirectEnabled":
+		setting.AlipayDirectEnabled = value == "true"
+	case "AlipayDirectSandbox":
+		setting.AlipayDirectSandbox = value == "true"
+	case "AlipayDirectAppId":
+		setting.AlipayDirectAppId = value
+	// AlipayDirectPrivateKey / AppCert / PublicCert / RootCert
+	// 从 cert/alipay/ 文件加载，不通过 option 系统更新。
+	case "AlipayDirectNotifyURL":
+		setting.AlipayDirectNotifyURL = value
+	case "AlipayDirectReturnURL":
+		setting.AlipayDirectReturnURL = value
+	case "AlipayDirectSellerId":
+		setting.AlipayDirectSellerId = value
+	case "AlipayDirectUnitPrice":
+		setting.AlipayDirectUnitPrice, _ = strconv.ParseFloat(value, 64)
+	case "AlipayDirectMinTopUp":
+		setting.AlipayDirectMinTopUp, _ = strconv.Atoi(value)
 	case "TopupGroupRatio":
 		err = common.UpdateTopupGroupRatioByJSONString(value)
 	case "GitHubClientId":

@@ -41,3 +41,14 @@ service/relayconvert/chat_responses_live_local_test.go
 service/openaicompat/chat_responses_live_local_test.go
 go.work
 go.work.sum
+
+# TLS certificates and keys (never commit).
+cert/
+*.pem
+*.key
+
+# Personal deploy scripts and notes.
+deploy.sh
+deploy_restart.sh
+test.sh
+域名.txt

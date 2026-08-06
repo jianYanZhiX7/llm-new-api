@@ -3,6 +3,7 @@ package controller
 import (
 	"strings"
 
+	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
 )
@@ -107,4 +108,30 @@ func isEpayWebhookConfigured() bool {
 
 func isEpayWebhookEnabled() bool {
 	return isEpayTopUpEnabled()
+}
+
+// isAlipayDirectTopUpEnabled 直连支付宝充值总开关：合规已确认 + 总开关开启 + 证书配置齐全。
+func isAlipayDirectTopUpEnabled() bool {
+	return service.IsAlipayDirectEnabled()
+}
+
+// isAlipayDirectWebhookConfigured 仅检查证书 / AppId 完整性，供 webhook 路由在合规未确认时也能拒绝。
+func isAlipayDirectWebhookConfigured() bool {
+	return strings.TrimSpace(setting.AlipayDirectAppId) != "" &&
+		strings.TrimSpace(setting.AlipayDirectPrivateKey) != "" &&
+		strings.TrimSpace(setting.AlipayDirectAppCert) != "" &&
+		strings.TrimSpace(setting.AlipayDirectPublicCert) != "" &&
+		strings.TrimSpace(setting.AlipayDirectRootCert) != ""
+}
+
+// isAlipayDirectWebhookEnabled webhook 是否接受回调。
+// 与充值开关一致：合规未确认时拒绝所有回调（防绕过合规审计）。
+func isAlipayDirectWebhookEnabled() bool {
+	if !isPaymentComplianceConfirmed() {
+		return false
+	}
+	if !setting.AlipayDirectEnabled {
+		return false
+	}
+	return isAlipayDirectWebhookConfigured()
 }

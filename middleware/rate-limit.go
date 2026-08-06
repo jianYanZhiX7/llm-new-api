@@ -241,3 +241,10 @@ func SearchRateLimit() func(c *gin.Context) {
 	}
 	return userRateLimitFactory(common.SearchRateLimitNum, common.SearchRateLimitDuration, "SR")
 }
+
+// PaymentQueryRateLimit returns a per-user rate limiter for payment status
+// polling endpoints. Configurable via PAYMENT_QUERY_RATE_LIMIT /
+// PAYMENT_QUERY_RATE_LIMIT_DURATION.
+func PaymentQueryRateLimit() func(c *gin.Context) {
+	return userRateLimitFactory(common.PaymentQueryRateLimitNum, common.PaymentQueryRateLimitDuration, "PQ")
+}
