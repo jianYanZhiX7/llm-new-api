@@ -1,13 +1,7 @@
 {
   "<strong>{{user}}</strong>, {{client}} wants to create an API token named <code>{{tokenName}}</code> to access the model API.": "<strong>{{user}}</strong>, {{client}} wants to create an API token named <code>{{tokenName}}</code> to access the model API.",
-  "Alipay Direct": "Alipay Direct",
-  "Authorization failed": "Authorization failed",
-  "Authorizing…": "Authorizing…",
-  "Decline": "Decline",
   "Redirecting to sign in…": "Redirecting to sign in…",
   "Requests access to your account": "Requests access to your account",
   "Reuses an existing token with the same name": "Reuses an existing token with the same name",
-  "Revoke anytime from the token management page": "Revoke anytime from the token management page",
-  "Unknown application": "Unknown application",
-  "Unlimited quota, never expires, all models": "Unlimited quota, never expires, all models"
+  "Revoke anytime from the token management page": "Revoke anytime from the token management page"
 }

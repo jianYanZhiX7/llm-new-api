@@ -3,7 +3,6 @@ package controller
 import (
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"sync"
@@ -97,7 +96,7 @@ func OAuthProviderAuthorize(c *gin.Context) {
 		return
 	}
 
-	payload, err := json.Marshal(oauthProviderCodePayload{
+	payload, err := common.Marshal(oauthProviderCodePayload{
 		CodeChallenge:       req.CodeChallenge,
 		CodeChallengeMethod: req.CodeChallengeMethod,
 		RedirectURI:         req.RedirectURI,
@@ -215,7 +214,7 @@ func OAuthProviderToken(c *gin.Context) {
 	}
 
 	var payload oauthProviderCodePayload
-	if err := json.Unmarshal([]byte(flow.Payload), &payload); err != nil {
+	if err := common.Unmarshal([]byte(flow.Payload), &payload); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "payload decode failed"})
 		return
 	}
