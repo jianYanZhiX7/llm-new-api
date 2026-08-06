@@ -283,6 +283,15 @@ func GetTokenByKey(key string, fromDB bool) (token *Token, err error) {
 	return token, err
 }
 
+func FindUserTokenByName(userId int, name string) (*Token, error) {
+	var token Token
+	err := DB.Where("user_id = ? AND name = ?", userId, name).First(&token).Error
+	if err != nil {
+		return nil, err
+	}
+	return &token, nil
+}
+
 func (token *Token) Insert() error {
 	var err error
 	err = DB.Create(token).Error
