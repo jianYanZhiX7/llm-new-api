@@ -1,5 +1,12 @@
 {
   "<strong>{{user}}</strong>, {{client}} wants to create an API token named <code>{{tokenName}}</code> to access the model API.": "<strong>{{user}}</strong>, {{client}} wants to create an API token named <code>{{tokenName}}</code> to access the model API.",
+  "Display the new marketing-style home page. When off, the default home page is shown. Custom home page content always takes priority.": "Display the new marketing-style home page. When off, the default home page is shown. Custom home page content always takes priority.",
+  "The financial infrastructure of the AI Agent era": "The financial infrastructure of the AI Agent era",
+  "Same top models, less cost. Mainstream provider token rates are fully transparent, with no hidden markup.": "Same top models, less cost. Mainstream provider token rates are fully transparent, with no hidden markup.",
+  "PII is auto-masked, so sensitive data never leaks to model providers. Enterprise-grade security.": "PII is auto-masked, so sensitive data never leaks to model providers. Enterprise-grade security.",
+  "One console to monitor token usage, latency, and spend across all models, with fine-grained breakdown.": "One console to monitor token usage, latency, and spend across all models, with fine-grained breakdown.",
+  "Create and copy your API key": "Create and copy your API key",
+  "Browse 100+ mainstream models and pick as needed": "Browse 100+ mainstream models and pick as needed",
   "Redirecting to sign in…": "Redirecting to sign in…",
   "Requests access to your account": "Requests access to your account",
   "Reuses an existing token with the same name": "Reuses an existing token with the same name",

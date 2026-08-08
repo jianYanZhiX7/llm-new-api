@@ -23,9 +23,12 @@ import { PublicLayout } from '@/components/layout'
 import { Footer } from '@/components/layout/components/footer'
 import { RichContent } from '@/components/rich-content'
 import { useTheme } from '@/context/theme-provider'
+import { useStatus } from '@/hooks/use-status'
 import { isLikelyHtml } from '@/lib/content-format'
 import { useAuthStore } from '@/stores/auth-store'
 
+import { ClassicFooter } from './classic/classic-footer'
+import { ClassicHome } from './classic/classic-home'
 import { CTA, Features, Hero, HowItWorks, Stats } from './components'
 import { useHomePageContent } from './hooks'
 
@@ -36,6 +39,8 @@ export function Home() {
   const { auth } = useAuthStore()
   const isAuthenticated = !!auth.user
   const { content, isLoaded, isUrl } = useHomePageContent()
+  const { status } = useStatus()
+  const enableNewHomePage = status?.enable_new_home_page || false
 
   const syncIframePreferences = useCallback(() => {
     try {
@@ -116,6 +121,15 @@ export function Home() {
             className='custom-home-content'
           />
         </div>
+      </PublicLayout>
+    )
+  }
+
+  if (enableNewHomePage) {
+    return (
+      <PublicLayout showMainContainer={false}>
+        <ClassicHome />
+        <ClassicFooter />
       </PublicLayout>
     )
   }
