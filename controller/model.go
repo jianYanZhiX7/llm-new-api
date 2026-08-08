@@ -166,6 +166,7 @@ func buildOpenAIModel(modelName string, ownerByModel map[string]string) dto.Open
 		oaiModel.OwnedBy = owner
 	}
 	oaiModel.SupportedEndpointTypes = model.GetModelSupportEndpointTypes(modelName)
+	oaiModel.ContextWindow, oaiModel.ContextWindowSource = service.GetModelContextWindow(modelName)
 	return oaiModel
 }
 
