@@ -19,7 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import i18next from 'i18next'
 import { CreditCard, Landmark } from 'lucide-react'
 import { type ReactNode } from 'react'
-import { SiAlipay, SiWechat, SiStripe } from 'react-icons/si'
+import { SiWechat, SiStripe } from 'react-icons/si'
 
 import { ReactIconByName } from '@/components/react-icon-by-name'
 
@@ -55,6 +55,20 @@ function normalizeHttpIconUrl(raw: string | undefined | null): string | null {
   return url.toString()
 }
 
+function renderAlipayLogo(className: string, alt: string): ReactNode {
+  return (
+    <img
+      src='/alipay-logo.svg'
+      alt={alt}
+      className={className}
+      style={{ objectFit: 'contain' }}
+      loading='lazy'
+      decoding='async'
+      referrerPolicy='no-referrer'
+    />
+  )
+}
+
 /**
  * Get payment method icon component
  *
@@ -84,6 +98,9 @@ export function getPaymentIcon(
     )
   }
   if (iconValue) {
+    if (iconValue === 'SiAlipay') {
+      return renderAlipayLogo(className, altName || 'Alipay')
+    }
     return (
       <ReactIconByName
         name={iconValue}
@@ -99,12 +116,8 @@ export function getPaymentIcon(
 
   switch (paymentType) {
     case PAYMENT_TYPES.ALIPAY:
-      return (
-        <SiAlipay
-          className={className}
-          style={{ color: PAYMENT_ICON_COLORS[PAYMENT_TYPES.ALIPAY] }}
-        />
-      )
+    case PAYMENT_TYPES.ALIPAY_DIRECT:
+      return renderAlipayLogo(className, altName || 'Alipay')
     case PAYMENT_TYPES.WECHAT:
       return (
         <SiWechat
