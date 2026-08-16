@@ -102,10 +102,16 @@ Success prints `Time:` (seconds). Failure prints the server message and
 
 ### 3. Set pricing (only when requested)
 
-Discuss prices with the user in USD per 1M tokens - the same convention as
-the web pricing page (`list-prices` also displays this way). The server
-stores ratios internally (ratio N = $2N/1M tokens); only `--ratio` is
-affected by the conversion, relative multipliers pass through as-is.
+The server stores and bills in **USD**. Internally prices are ratios, where
+ratio N = $2N per 1M tokens. Only `--ratio` is affected by that conversion;
+relative multipliers (`--completion`, `--cache`, `--create-cache`) pass
+through as-is.
+
+The web pricing page displays currency according to the site's
+`quota_display_type`: `USD` (default) or `CNY` (1 USD = 7.3 RMB). Note that
+`list-prices` always prints USD and does NOT follow that setting, so a
+`$1/1M` line there may appear as `¥7.3/1M` on the web page. Discuss prices
+with the user in the currency the web UI actually shows.
 
 ```bash
 # Per-token: --ratio is the input ratio (0.5 = $1/1M input);
@@ -138,6 +144,94 @@ the exact relay path a real caller uses (auth, routing, billing).
 ./deployer/new-api-deployer list-models
 ```
 
+## Pricing research & batch updates
+
+When the user asks to update many model prices at once (especially to match
+or discount official pricing), follow this workflow.
+
+### Finding official pricing
+
+Primary sources, in order of reliability:
+
+1. **LiteLLM pricing database** — the most comprehensive machine-readable
+   source. Fetch and query with:
+
+   ```bash
+   curl -sS "https://raw.githubusercontent.com/BerriAI/litellm/refs/heads/main/model_prices_and_context_window.json" | python3 -c "
+   import json, sys
+   data = json.load(sys.stdin)
+   # Look for official provider pricing by prefix:
+   #   dashscope/    — Aliyun Qwen
+   #   moonshot/     — Kimi
+   #   zai/          — GLM (Zhipu)
+   #   minimax/      — MiniMax
+   #   deepseek/     — DeepSeek
+   #   volcengine/   — Doubao (often N/A — pricing behind SPA)
+   for k, v in data.items():
+       if k.startswith('dashscope/qwen') or k.startswith('moonshot/kimi'):
+           ic = v.get('input_cost_per_token')
+           oc = v.get('output_cost_per_token')
+           print(f'{k}: input={ic}, output={oc}')
+   "
+   ```
+
+   Key prefixes for official pricing:
+   | Provider | LiteLLM prefix | Notes |
+   |---|---|---|
+   | DeepSeek | `deepseek/`, `deepseek-v4-*` | Also check https://api-docs.deepseek.com/quick_start/pricing |
+   | Qwen (Aliyun) | `dashscope/qwen*` | SPA site, hard to scrape |
+   | Kimi (Moonshot) | `moonshot/kimi*` | SPA site, hard to scrape |
+   | GLM (Zhipu) | `zai/glm*` | SPA site, hard to scrape |
+   | MiniMax | `minimax/MiniMax*` | SPA site, hard to scrape |
+   | Doubao (Volcengine) | `volcengine/doubao*` | Pricing often `N/A` — behind SPA |
+
+2. **DeepSeek official docs** — the only provider whose pricing page is
+   server-rendered and scrapable:
+
+   ```bash
+   curl -sS "https://api-docs.deepseek.com/quick_start/pricing" | grep -oP '(deepseek-v4-\w+|\$[0-9.]+|Cache|Input|Output)'
+   ```
+
+3. **Chinese provider pages** (Aliyun, Moonshot, Zhipu, MiniMax, Volcengine) —
+   all use client-side React rendering (Next.js / SPA). `curl` and `WebFetch`
+   return empty shells. You may need to rely on LiteLLM or the user's
+   knowledge of official pricing.
+
+### Computing set-price flags from USD/1M
+
+The server formula: `ratio N = $2N / 1M tokens`.
+
+- `--ratio` = input_price / 2
+- `--completion` = output_price / input_price
+- `--cache` = cache_read_price / input_price
+
+Example: official price $0.95 input, $4.00 output, $0.16 cache_read →
+`--ratio 0.475 --completion 4.21 --cache 0.1684`.
+
+### Batch update pattern
+
+```bash
+# Run all set-price commands in parallel — they are independent
+for m in model1 model2 model3; do
+  ./deployer/new-api-deployer set-price --model "$m" --ratio X --completion Y &
+done
+wait
+```
+
+Then verify with `list-prices`.
+
+### When official pricing is unavailable
+
+Some models have no public pricing data (e.g. Doubao Seed 2.0, new Kimi K3
+versions). In these cases:
+
+- Check if the model name maps to a known upstream model (e.g. `qwen3.6-max`
+  may be an alias for `qwen-max`).
+- Use the user's guidance ("比 DeepSeek 高 50%") as a reference anchor.
+- Default conservative: price higher than the cheapest comparable model so
+  you don't undercut without data.
+- Mark uncertain prices clearly and ask the user to confirm before applying.
+
 ## Gotchas
 
 - **The server API does not return the new channel's ID.** `add-channel`
@@ -159,11 +253,18 @@ the exact relay path a real caller uses (auth, routing, billing).
 - `test-channel` only proves the channel's key/endpoint works. It does not
   prove user-visible routing or billing — that's what `verify-model` does.
   Run both.
-- **Two ways to express the same price.** The web pricing page and
-  `list-prices` show USD per 1M tokens; the server stores ratios
-  (ratio N = $2N/1M). Ratio 0.5 and "$1/1M" are the same price - do not
-  "fix" one to match the other. Only `--ratio` needs conversion; relative
-  multipliers (`--completion`, `--cache`, `--create-cache`) pass through.
+- **Two ways to express the same price.** The server stores ratios
+  (ratio N = $2N/1M) and bills in USD. Ratio 0.5 and "$1/1M" are the same
+  price - do not "fix" one to match the other. Only `--ratio` needs
+  conversion; relative multipliers (`--completion`, `--cache`,
+  `--create-cache`) pass through.
+- **USD vs 人民币 (CNY) display.** `list-prices` always prints USD and does
+  NOT follow the site's display currency. The web pricing page, by contrast,
+  shows prices according to `general_setting.quota_display_type`: `USD`
+  (default) or `CNY` (1 USD = 7.3 RMB, see `USD2RMB` in
+  `setting/ratio_setting/model_ratio.go`). Before quoting a price to the user,
+  check `GET /api/option/` for `general_setting.quota_display_type` so you
+  report the same currency the web UI shows.
 - **Server-side hardcoded completion ratios.** For model families like
   `gpt-*`, `claude-*`, `gemini-*`, `o1`/`o3`, `mistral-*`, `command*`,
   the server ignores the configured completion ratio and uses a hardcoded

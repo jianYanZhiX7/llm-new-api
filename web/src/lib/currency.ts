@@ -101,6 +101,8 @@ export interface CurrencyFormatOptions {
   compact?: boolean
   /** Whether to include the currency/custom symbol. Token displays are unchanged. */
   showSymbol?: boolean
+  /** Truncate fractional part before formatting (Math.trunc) instead of rounding */
+  truncateDecimals?: boolean
   /** Locale used for number formatting (defaults to the runtime locale) */
   locale?: Intl.LocalesArgument | undefined
 }
@@ -137,6 +139,7 @@ const DEFAULT_FORMAT_OPTIONS: ResolvedCurrencyFormatOptions = {
   minimumNonZero: 0,
   compact: false,
   showSymbol: true,
+  truncateDecimals: false,
   locale: undefined,
 }
 
@@ -240,6 +243,8 @@ function mergeOptions(
       options.minimumNonZero ?? DEFAULT_FORMAT_OPTIONS.minimumNonZero,
     compact: options.compact ?? DEFAULT_FORMAT_OPTIONS.compact,
     showSymbol: options.showSymbol ?? DEFAULT_FORMAT_OPTIONS.showSymbol,
+    truncateDecimals:
+      options.truncateDecimals ?? DEFAULT_FORMAT_OPTIONS.truncateDecimals,
     locale: options.locale ?? DEFAULT_FORMAT_OPTIONS.locale,
   }
 }
@@ -285,15 +290,18 @@ function formatCurrencyValue(
   options: ResolvedCurrencyFormatOptions,
   meta: DisplayMeta
 ): string {
+  const displayValue =
+    options.truncateDecimals && Math.abs(value) >= 1 ? Math.trunc(value) : value
+
   if (meta.kind === 'tokens') {
     if (options.compact) {
       return new Intl.NumberFormat(options.locale, {
         notation: 'compact',
         maximumFractionDigits: 1,
-      }).format(value)
+      }).format(displayValue)
     }
     return formatNumberWithSuffix(
-      value,
+      displayValue,
       options.digitsLarge,
       options.digitsSmall,
       options.abbreviate
@@ -301,8 +309,8 @@ function formatCurrencyValue(
   }
 
   const digits =
-    Math.abs(value) >= 1 ? options.digitsLarge : options.digitsSmall
-  const adjustedValue = adjustForMinimum(value, digits, options.minimumNonZero)
+    Math.abs(displayValue) >= 1 ? options.digitsLarge : options.digitsSmall
+  const adjustedValue = adjustForMinimum(displayValue, digits, options.minimumNonZero)
 
   if (meta.kind === 'currency') {
     if (!options.showSymbol) {

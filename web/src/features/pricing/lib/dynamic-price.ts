@@ -104,6 +104,7 @@ export function formatDynamicUnitPrice(
     digitsLarge: 4,
     digitsSmall: 6,
     abbreviate: false,
+    truncateDecimals: true,
   })
 }
 

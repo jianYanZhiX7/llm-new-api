@@ -27,6 +27,8 @@ This is an AI API gateway/proxy built with Go. It aggregates 40+ upstream AI pro
 
 Layered architecture: Router -> Controller -> Service -> Model
 
+deployer/      — Standalone `new-api-deployer` Go CLI; automates channel/model/pricing deployment via admin + relay REST APIs (see deployer/README.md)
+  skills/newapi-deploy/ — Agent skill (SKILL.md) that drives the CLI: standard workflow (add-channel -> test-channel -> set-price -> verify-model -> list-models), credential setup, and gotchas
 ```
 router/        — HTTP routing (API, relay, dashboard, web)
 controller/    — Request handlers

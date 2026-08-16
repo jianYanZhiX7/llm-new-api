@@ -169,6 +169,7 @@ export function formatPrice(
     digitsLarge: 4,
     digitsSmall: 6,
     abbreviate: false,
+    truncateDecimals: true,
   })
 }
 
@@ -204,6 +205,7 @@ export function formatGroupPrice(
     digitsLarge: 4,
     digitsSmall: 6,
     abbreviate: false,
+    truncateDecimals: true,
   })
 }
 
@@ -236,6 +238,7 @@ export function formatFixedPrice(
     digitsLarge: 4,
     digitsSmall: 4,
     abbreviate: false,
+    truncateDecimals: true,
   })
 }
 
@@ -268,5 +271,6 @@ export function formatRequestPrice(
     digitsLarge: 4,
     digitsSmall: 4,
     abbreviate: false,
+    truncateDecimals: true,
   })
 }
