@@ -101,7 +101,7 @@ export interface CurrencyFormatOptions {
   compact?: boolean
   /** Whether to include the currency/custom symbol. Token displays are unchanged. */
   showSymbol?: boolean
-  /** Truncate fractional part before formatting (Math.trunc) instead of rounding */
+  /** Truncate instead of rounding: values ≥1 drop the fraction, values <1 keep 2 decimals */
   truncateDecimals?: boolean
   /** Locale used for number formatting (defaults to the runtime locale) */
   locale?: Intl.LocalesArgument | undefined
@@ -285,13 +285,21 @@ function adjustForMinimum(
   return value
 }
 
+function truncateToDecimals(value: number, decimals: number): number {
+  const factor = 10 ** decimals
+  return Math.trunc(value * factor + Number.EPSILON * factor) / factor
+}
+
 function formatCurrencyValue(
   value: number,
   options: ResolvedCurrencyFormatOptions,
   meta: DisplayMeta
 ): string {
-  const displayValue =
-    options.truncateDecimals && Math.abs(value) >= 1 ? Math.trunc(value) : value
+  const displayValue = options.truncateDecimals
+    ? Math.abs(value) >= 1
+      ? Math.trunc(value)
+      : truncateToDecimals(value, 2)
+    : value
 
   if (meta.kind === 'tokens') {
     if (options.compact) {
