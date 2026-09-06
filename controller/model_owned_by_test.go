@@ -79,6 +79,20 @@ func TestBuildOpenAIModelFallsBackToCustomForUnknownModels(t *testing.T) {
 	require.Equal(t, "custom", modelItem.OwnedBy)
 }
 
+func TestBuildOpenAIModelDeepchatFields(t *testing.T) {
+	deepchatDefault := buildOpenAIModel("deepseek-v4-pro", nil)
+	require.True(t, deepchatDefault.IsDeepchat)
+	require.True(t, deepchatDefault.DeepchatDefault)
+
+	deepchatNonDefault := buildOpenAIModel("deepseek-chat", nil)
+	require.True(t, deepchatNonDefault.IsDeepchat)
+	require.False(t, deepchatNonDefault.DeepchatDefault)
+
+	nonDeepchat := buildOpenAIModel("gpt-5.4", nil)
+	require.False(t, nonDeepchat.IsDeepchat)
+	require.False(t, nonDeepchat.DeepchatDefault)
+}
+
 func TestGetModelListGroupsUsesUserGroupWhenTokenGroupIsEmpty(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())

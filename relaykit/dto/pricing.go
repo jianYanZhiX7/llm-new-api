@@ -11,6 +11,8 @@ type OpenAIModels struct {
 	SupportedEndpointTypes []types.EndpointType `json:"supported_endpoint_types"`
 	ContextWindow          *int                 `json:"context_window,omitempty"`
 	ContextWindowSource    string               `json:"context_window_source,omitempty"`
+	IsDeepchat             bool                 `json:"is_deepchat"`
+	DeepchatDefault        bool                 `json:"deepchat_default"`
 }
 
 type AnthropicModel struct {

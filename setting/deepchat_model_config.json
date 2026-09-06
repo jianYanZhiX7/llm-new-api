@@ -1,0 +1,12 @@
+{
+  "default": "deepseek-v4-pro",
+  "models": [
+    "deepseek-v4-flash",
+    "deepseek-v4-pro",
+    "Doubao-Seed-2.0",
+    "GLM-5-Turbo",
+    "GLM-5.2",
+    "Kimi-K3",
+    "qwen3.8-max"
+  ]
+}
