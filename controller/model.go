@@ -150,6 +150,26 @@ func getPreferredModelOwners(modelNames []string, groups []string) map[string]st
 	return owners
 }
 
+func ownedByFromModelName(modelName string) string {
+	cut := len(modelName)
+	for _, sep := range []byte{'-', '_', '/', ':', '.', ' '} {
+		if i := strings.IndexByte(modelName, sep); i >= 0 && i < cut {
+			cut = i
+		}
+	}
+	first := modelName[:cut]
+	var b strings.Builder
+	for _, r := range first {
+		if r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' {
+			b.WriteRune(r)
+		}
+	}
+	if b.Len() == 0 {
+		return "custom"
+	}
+	return b.String()
+}
+
 func buildOpenAIModel(modelName string, ownerByModel map[string]string) dto.OpenAIModels {
 	var oaiModel dto.OpenAIModels
 	if staticModel, ok := openAIModelsMap[modelName]; ok {
@@ -165,6 +185,7 @@ func buildOpenAIModel(modelName string, ownerByModel map[string]string) dto.Open
 	if owner, ok := ownerByModel[modelName]; ok && owner != "" {
 		oaiModel.OwnedBy = owner
 	}
+	oaiModel.OwnedBy = ownedByFromModelName(modelName)
 	oaiModel.SupportedEndpointTypes = model.GetModelSupportEndpointTypes(modelName)
 	oaiModel.ContextWindow, oaiModel.ContextWindowSource = service.GetModelContextWindow(modelName)
 	return oaiModel

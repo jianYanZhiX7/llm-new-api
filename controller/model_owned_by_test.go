@@ -45,10 +45,32 @@ func TestChannelOwnerNameUsesAdaptorChannelName(t *testing.T) {
 	}
 }
 
-func TestBuildOpenAIModelOverridesOwnedBy(t *testing.T) {
+func TestBuildOpenAIModelDerivesOwnedByFromModelName(t *testing.T) {
 	modelItem := buildOpenAIModel("gpt-5.4", map[string]string{"gpt-5.4": "openai"})
 	require.Equal(t, "gpt-5.4", modelItem.Id)
-	require.Equal(t, "openai", modelItem.OwnedBy)
+	require.Equal(t, "gpt", modelItem.OwnedBy)
+}
+
+func TestOwnedByFromModelName(t *testing.T) {
+	tests := []struct {
+		name      string
+		modelName string
+		expected  string
+	}{
+		{"deepseek hyphen", "deepseek-v4-pro", "deepseek"},
+		{"gpt dot", "gpt-5.4", "gpt"},
+		{"digits stripped", "qwen2.5-max", "qwen"},
+		{"claude multi hyphen", "claude-3-5-sonnet", "claude"},
+		{"gemini slash", "gemini/2.0-flash", "gemini"},
+		{"underscore separator", "my_model_v2", "my"},
+		{"custom fallback name", "custom-test-model", "custom"},
+		{"no letters falls back", "360-v1", "custom"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.expected, ownedByFromModelName(tt.modelName))
+		})
+	}
 }
 
 func TestBuildOpenAIModelFallsBackToCustomForUnknownModels(t *testing.T) {
