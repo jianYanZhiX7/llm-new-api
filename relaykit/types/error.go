@@ -95,6 +95,7 @@ type NewAPIError struct {
 	errorType      ErrorType
 	errorCode      ErrorCode
 	StatusCode     int
+	RetryAfter     string
 	Metadata       json.RawMessage
 }
 
