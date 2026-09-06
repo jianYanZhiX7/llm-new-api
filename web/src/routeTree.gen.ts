@@ -29,6 +29,7 @@ import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as AuthenticatedChat2linkRouteImport } from './routes/_authenticated/chat2link'
 import { Route as AuthenticatedSystemSettingsRouteRouteImport } from './routes/_authenticated/system-settings/route'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
+import { Route as DeepchatIndexRouteImport } from './routes/deepchat/index'
 import { Route as OauthProviderRouteImport } from './routes/oauth/$provider'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth/authorize'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
@@ -166,6 +167,11 @@ const AuthenticatedSystemSettingsRouteRoute =
 const AboutIndexRoute = AboutIndexRouteImport.update({
   id: '/about/',
   path: '/about/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeepchatIndexRoute = DeepchatIndexRouteImport.update({
+  id: '/deepchat/',
+  path: '/deepchat/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OauthProviderRoute = OauthProviderRouteImport.update({
@@ -414,6 +420,7 @@ export interface FileRoutesByFullPath {
   '/oauth/$provider': typeof OauthProviderRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/about/': typeof AboutIndexRoute
+  '/deepchat/': typeof DeepchatIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/rankings/': typeof RankingsIndexRoute
   '/setup/': typeof SetupIndexRoute
@@ -472,6 +479,7 @@ export interface FileRoutesByTo {
   '/oauth/$provider': typeof OauthProviderRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/about': typeof AboutIndexRoute
+  '/deepchat': typeof DeepchatIndexRoute
   '/pricing': typeof PricingIndexRoute
   '/rankings': typeof RankingsIndexRoute
   '/setup': typeof SetupIndexRoute
@@ -534,6 +542,7 @@ export interface FileRoutesById {
   '/oauth/$provider': typeof OauthProviderRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/about/': typeof AboutIndexRoute
+  '/deepchat/': typeof DeepchatIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/rankings/': typeof RankingsIndexRoute
   '/setup/': typeof SetupIndexRoute
@@ -595,6 +604,7 @@ export interface FileRouteTypes {
     | '/oauth/$provider'
     | '/oauth/authorize'
     | '/about/'
+    | '/deepchat/'
     | '/pricing/'
     | '/rankings/'
     | '/setup/'
@@ -653,6 +663,7 @@ export interface FileRouteTypes {
     | '/oauth/$provider'
     | '/oauth/authorize'
     | '/about'
+    | '/deepchat'
     | '/pricing'
     | '/rankings'
     | '/setup'
@@ -714,6 +725,7 @@ export interface FileRouteTypes {
     | '/oauth/$provider'
     | '/oauth/authorize'
     | '/about/'
+    | '/deepchat/'
     | '/pricing/'
     | '/rankings/'
     | '/setup/'
@@ -767,6 +779,7 @@ export interface RootRouteChildren {
   OauthProviderRoute: typeof OauthProviderRoute
   OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   AboutIndexRoute: typeof AboutIndexRoute
+  DeepchatIndexRoute: typeof DeepchatIndexRoute
   PricingIndexRoute: typeof PricingIndexRoute
   RankingsIndexRoute: typeof RankingsIndexRoute
   SetupIndexRoute: typeof SetupIndexRoute
@@ -913,6 +926,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about/'
       preLoaderRoute: typeof AboutIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deepchat/': {
+      id: '/deepchat/'
+      path: '/deepchat'
+      fullPath: '/deepchat/'
+      preLoaderRoute: typeof DeepchatIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/oauth/$provider': {
@@ -1337,6 +1357,7 @@ const rootRouteChildren: RootRouteChildren = {
   OauthProviderRoute: OauthProviderRoute,
   OauthAuthorizeRoute: OauthAuthorizeRoute,
   AboutIndexRoute: AboutIndexRoute,
+  DeepchatIndexRoute: DeepchatIndexRoute,
   PricingIndexRoute: PricingIndexRoute,
   RankingsIndexRoute: RankingsIndexRoute,
   SetupIndexRoute: SetupIndexRoute,
