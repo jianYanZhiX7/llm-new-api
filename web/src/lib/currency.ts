@@ -101,8 +101,6 @@ export interface CurrencyFormatOptions {
   compact?: boolean
   /** Whether to include the currency/custom symbol. Token displays are unchanged. */
   showSymbol?: boolean
-  /** Truncate instead of rounding: values ≥1 drop the fraction, values <1 keep 2 decimals */
-  truncateDecimals?: boolean
   /** Locale used for number formatting (defaults to the runtime locale) */
   locale?: Intl.LocalesArgument | undefined
 }
@@ -139,7 +137,6 @@ const DEFAULT_FORMAT_OPTIONS: ResolvedCurrencyFormatOptions = {
   minimumNonZero: 0,
   compact: false,
   showSymbol: true,
-  truncateDecimals: false,
   locale: undefined,
 }
 
@@ -243,10 +240,25 @@ function mergeOptions(
       options.minimumNonZero ?? DEFAULT_FORMAT_OPTIONS.minimumNonZero,
     compact: options.compact ?? DEFAULT_FORMAT_OPTIONS.compact,
     showSymbol: options.showSymbol ?? DEFAULT_FORMAT_OPTIONS.showSymbol,
-    truncateDecimals:
-      options.truncateDecimals ?? DEFAULT_FORMAT_OPTIONS.truncateDecimals,
     locale: options.locale ?? DEFAULT_FORMAT_OPTIONS.locale,
   }
+}
+
+function getFractionDigits(
+  value: number,
+  digitsLarge: number,
+  digitsSmall: number
+): number {
+  return Math.abs(value) >= 1 ? digitsLarge : digitsSmall
+}
+
+/** Return the configured fraction digits for a plain currency value. */
+export function getCurrencyFractionDigits(
+  value: number,
+  options?: CurrencyFormatOptions
+): number {
+  const merged = mergeOptions(options)
+  return getFractionDigits(value, merged.digitsLarge, merged.digitsSmall)
 }
 
 function removeTrailingZeros(str: string): string {
@@ -266,7 +278,7 @@ function formatNumberWithSuffix(
     return `${removeTrailingZeros(result.toFixed(1))}k`
   }
 
-  const digits = abs >= 1 ? digitsLarge : digitsSmall
+  const digits = getFractionDigits(value, digitsLarge, digitsSmall)
   return removeTrailingZeros(value.toFixed(digits))
 }
 
@@ -285,40 +297,32 @@ function adjustForMinimum(
   return value
 }
 
-function truncateToDecimals(value: number, decimals: number): number {
-  const factor = 10 ** decimals
-  return Math.trunc(value * factor + Number.EPSILON * factor) / factor
-}
-
 function formatCurrencyValue(
   value: number,
   options: ResolvedCurrencyFormatOptions,
   meta: DisplayMeta
 ): string {
-  const displayValue = options.truncateDecimals
-    ? Math.abs(value) >= 1
-      ? Math.trunc(value)
-      : truncateToDecimals(value, 2)
-    : value
-
   if (meta.kind === 'tokens') {
     if (options.compact) {
       return new Intl.NumberFormat(options.locale, {
         notation: 'compact',
         maximumFractionDigits: 1,
-      }).format(displayValue)
+      }).format(value)
     }
     return formatNumberWithSuffix(
-      displayValue,
+      value,
       options.digitsLarge,
       options.digitsSmall,
       options.abbreviate
     )
   }
 
-  const digits =
-    Math.abs(displayValue) >= 1 ? options.digitsLarge : options.digitsSmall
-  const adjustedValue = adjustForMinimum(displayValue, digits, options.minimumNonZero)
+  const digits = getFractionDigits(
+    value,
+    options.digitsLarge,
+    options.digitsSmall
+  )
+  const adjustedValue = adjustForMinimum(value, digits, options.minimumNonZero)
 
   if (meta.kind === 'currency') {
     if (!options.showSymbol) {
