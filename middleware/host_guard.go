@@ -25,8 +25,9 @@ func HostGuard() gin.HandlerFunc {
 		}
 		common.SysLog(fmt.Sprintf("host guard blocked: host=%q keyword=%q path=%s", c.Request.Host, keyword, c.Request.URL.Path))
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-			"error": gin.H{
-			},
+			"success": false,
+			"code":    "host_guard_blocked",
+			"message": "request host is not allowed",
 		})
 	}
 }

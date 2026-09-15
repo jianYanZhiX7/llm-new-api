@@ -87,7 +87,7 @@ func TestBuildOpenAIModelDeepchatFields(t *testing.T) {
 	require.True(t, deepchatDefault.IsDeepchat)
 	require.True(t, deepchatDefault.DeepchatDefault)
 
-	deepchatNonDefault := buildOpenAIModel("deepseek-chat", nil)
+	deepchatNonDefault := buildOpenAIModel("deepseek-v4-flash", nil)
 	require.True(t, deepchatNonDefault.IsDeepchat)
 	require.False(t, deepchatNonDefault.DeepchatDefault)
 
