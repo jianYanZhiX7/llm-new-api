@@ -481,6 +481,28 @@ func DoRequest(c *gin.Context, req *http.Request, info *common.RelayInfo) (*http
 	return doRequest(c, req, info)
 }
 
+func upstreamMetaFromRequest(req *http.Request, info *common.RelayInfo, resp *http.Response, reqErr error) common2.UpstreamMeta {
+	meta := common2.UpstreamMeta{
+		Attempt: info.RetryIndex,
+		Model:   info.UpstreamModelName,
+	}
+	if reqErr != nil {
+		meta.Error = reqErr.Error()
+	}
+	if req != nil {
+		meta.Method = req.Method
+		if req.URL != nil {
+			meta.URL = req.URL.String()
+		}
+		meta.RequestHeaders = req.Header.Clone()
+	}
+	if resp != nil {
+		meta.StatusCode = resp.StatusCode
+		meta.ResponseHeaders = resp.Header.Clone()
+	}
+	return meta
+}
+
 // keepUpstreamRedirectResponse stops net/http from following redirects while
 // returning the upstream 3xx response to the relay without an extra error.
 func keepUpstreamRedirectResponse(_ *http.Request, _ []*http.Request) error {
@@ -532,6 +554,7 @@ func doRequest(c *gin.Context, req *http.Request, info *common.RelayInfo) (*http
 	resp, err := relayClient.Do(req)
 	if err != nil {
 		logger.LogError(c, "do request failed: "+err.Error())
+		common2.AppendUpstreamMeta(c, upstreamMetaFromRequest(req, info, nil, err))
 		return nil, types.NewError(err, types.ErrorCodeDoRequestFailed, types.ErrOptionWithHideErrMsg("upstream error: do request failed"))
 	}
 	if resp == nil {
@@ -552,6 +575,8 @@ func doRequest(c *gin.Context, req *http.Request, info *common.RelayInfo) (*http
 	if upID := resp.Header.Get(common2.RequestIdKey); upID != "" {
 		c.Set(common2.UpstreamRequestIdKey, upID)
 	}
+
+	common2.AppendUpstreamMeta(c, upstreamMetaFromRequest(req, info, resp, nil))
 
 	_ = req.Body.Close()
 	_ = c.Request.Body.Close()
