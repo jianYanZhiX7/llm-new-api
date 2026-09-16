@@ -117,10 +117,10 @@ type relayDetailRecorder struct {
 }
 
 // RelayDetailLog 捕获转发请求/响应的完整信息并落盘到文件。
-// 默认关闭（RELAY_DETAIL_LOG=false），关闭时仅一次环境变量判断，无额外开销。
+// 默认开启，设置 RELAY_DETAIL_LOG=false 关闭，关闭时仅一次环境变量判断，无额外开销。
 func RelayDetailLog() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !common.GetEnvOrDefaultBool(relayDetailLogEnvEnabled, false) {
+		if !common.GetEnvOrDefaultBool(relayDetailLogEnvEnabled, true) {
 			c.Next()
 			return
 		}
