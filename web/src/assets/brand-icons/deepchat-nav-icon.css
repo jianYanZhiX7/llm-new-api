@@ -1,0 +1,68 @@
+/*
+Copyright (C) 2023-2026 QuantumNous
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+For commercial licensing, please contact support@quantumnous.com
+*/
+.deepchat-nav-icon {
+  --deepchat-nav-icon-slots: 5;
+  position: relative;
+  overflow: hidden;
+}
+
+.deepchat-nav-icon__track {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% * var(--deepchat-nav-icon-slots));
+  animation: deepchat-nav-icon-scroll 9s cubic-bezier(0.76, 0, 0.24, 1) infinite;
+  will-change: transform;
+}
+
+.deepchat-nav-icon__item {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: calc(100% / var(--deepchat-nav-icon-slots));
+}
+
+@keyframes deepchat-nav-icon-scroll {
+  0%,
+  18% {
+    transform: translateY(0);
+  }
+  25%,
+  43% {
+    transform: translateY(-20%);
+  }
+  50%,
+  68% {
+    transform: translateY(-40%);
+  }
+  75%,
+  93% {
+    transform: translateY(-60%);
+  }
+  100% {
+    transform: translateY(-80%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deepchat-nav-icon__track {
+    animation: none;
+  }
+}

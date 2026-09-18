@@ -65,6 +65,7 @@ export function PublicNavigation({
                 link.disabled && 'pointer-events-none opacity-50'
               )}
             >
+              {link.icon ? <link.icon className='size-4' /> : null}
               {link.title}
             </a>
           )
@@ -79,6 +80,7 @@ export function PublicNavigation({
               link.disabled && 'pointer-events-none opacity-50'
             )}
           >
+            {link.icon ? <link.icon className='size-4' /> : null}
             {link.title}
           </Link>
         )

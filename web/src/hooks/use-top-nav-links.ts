@@ -16,9 +16,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useMemo } from 'react'
+import { useMemo, type ElementType } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { DeepChatNavIcon } from '@/assets/brand-icons'
 import { useStatus } from '@/hooks/use-status'
 import { parseHeaderNavModulesFromStatus } from '@/lib/nav-modules'
 import { useAuthStore } from '@/stores/auth-store'
@@ -29,6 +30,7 @@ export type TopNavLink = {
   disabled?: boolean
   requiresAuth?: boolean
   external?: boolean
+  icon?: ElementType
 }
 
 /**
@@ -80,7 +82,7 @@ export function useTopNavLinks(): TopNavLink[] {
   }
 
   // DeepChat
-  links.push({ title: 'DeepChat', href: '/deepchat' })
+  links.push({ title: 'DeepChat', href: '/deepchat', icon: DeepChatNavIcon })
 
   // Rankings
   const rankings = modules?.rankings

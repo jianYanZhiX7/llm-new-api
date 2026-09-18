@@ -252,9 +252,11 @@ export function PublicHeader(props: PublicHeaderProps) {
                       onClick={(event) => handleNavLinkClick(event, link)}
                       className={cn(
                         'text-muted-foreground hover:text-foreground min-w-0 truncate rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-200',
+                        link.icon && 'inline-flex items-center gap-1.5',
                         link.disabled && 'pointer-events-none opacity-50'
                       )}
                     >
+                      {link.icon ? <link.icon className='size-4' /> : null}
                       {t(link.title)}
                     </a>
                   )
@@ -268,12 +270,14 @@ export function PublicHeader(props: PublicHeaderProps) {
                     onClick={(event) => handleNavLinkClick(event, link)}
                     className={cn(
                       'min-w-0 truncate rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-200',
+                      link.icon && 'inline-flex items-center gap-1.5',
                       isActive
                         ? 'text-foreground'
                         : 'text-muted-foreground hover:text-foreground',
                       link.disabled && 'pointer-events-none opacity-50'
                     )}
                   >
+                    {link.icon ? <link.icon className='size-4' /> : null}
                     {t(link.title)}
                   </Link>
                 )
@@ -385,6 +389,7 @@ export function PublicHeader(props: PublicHeaderProps) {
                     className={linkClassName}
                     style={transitionStyle}
                   >
+                    {link.icon ? <link.icon className='size-5' /> : null}
                     {t(link.title)}
                   </a>
                 )
@@ -398,6 +403,7 @@ export function PublicHeader(props: PublicHeaderProps) {
                   className={linkClassName}
                   style={transitionStyle}
                 >
+                  {link.icon ? <link.icon className='size-5' /> : null}
                   {t(link.title)}
                 </Link>
               )

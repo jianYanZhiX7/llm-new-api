@@ -16,6 +16,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+export {
+  IconDeepChatCodeExpert,
+  IconDeepChatDataAnalyst,
+  IconDeepChatWritingAssistant,
+} from './deepchat-agent-presets'
+export { DeepChatNavIcon } from './deepchat-nav-icon'
+export { IconDeepChat } from './icon-deepchat'
 export { IconDiscord } from './icon-discord'
 export { IconDocker } from './icon-docker'
 export { IconFacebook } from './icon-facebook'

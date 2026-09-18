@@ -30,6 +30,8 @@ import {
 
 import { PublicLayout } from '@/components/layout'
 
+import { TypewriterText } from './typewriter-text'
+
 type Feature = {
   icon: LucideIcon
   title: string
@@ -107,6 +109,15 @@ const manualSections: ManualSection[] = [
     title: 'Private by design',
     body: 'Chat and configuration data stay on your machine by default and are never uploaded. Encryption interfaces and code obfuscation are reserved for self-hosted enterprise customization, proxy configuration reduces direct-exposure risk, and privacy tools include screen-projection hiding. DeepChat is open source under the Apache License 2.0 — free to use and extend.',
   },
+]
+
+const DEEPCHAT_SLOGANS = [
+  '你想要的智能体，我都安排好了。',
+  '一个 DeepChat，装下所有智能体。',
+  '开箱即用，智能体随叫随到。',
+  '写代码、做分析、出方案，一句话的事。',
+  '本地优先，能力不设限。',
+  '想到的，它都能做到。',
 ]
 
 const ROTATING_WORDS = [
@@ -223,9 +234,8 @@ export function DeepChat() {
               className='w-full rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.12)]'
               loading='eager'
             />
-            <p className='mx-auto mt-6 max-w-2xl text-[17px] leading-[1.47] tracking-[-0.022em] text-[#6e6e73]'>
-              将模型、工具、Skills、Agent Runtime 与长会话统一在一款应用中，
-              支持 MCP、ACP 与远程控制。
+            <p className='mx-auto mt-6 min-h-[1.5em] max-w-2xl text-[17px] leading-[1.47] tracking-[-0.022em] text-[#6e6e73]'>
+              <TypewriterText texts={DEEPCHAT_SLOGANS} />
             </p>
           </div>
         </section>
