@@ -82,7 +82,11 @@ export function useTopNavLinks(): TopNavLink[] {
   }
 
   // DeepChat
-  links.push({ title: 'DeepChat', href: '/deepchat', icon: DeepChatNavIcon })
+  links.push({
+    title: 'DeepChat桌面端',
+    href: '/deepchat',
+    icon: DeepChatNavIcon,
+  })
 
   // Rankings
   const rankings = modules?.rankings

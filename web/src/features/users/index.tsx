@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useTranslation } from 'react-i18next'
 
+import { DesktopAgentButton } from '@/components/desktop-agent-button'
 import { SectionPageLayout } from '@/components/layout'
 
 import { UsersDeleteDialog } from './components/users-delete-dialog'
@@ -38,7 +39,14 @@ function UsersContent() {
           <UsersPrimaryButtons />
         </SectionPageLayout.Actions>
         <SectionPageLayout.Content>
-          <UsersTable />
+          <div className='flex h-full min-h-0 flex-col gap-2'>
+            <div className='flex shrink-0 justify-center'>
+              <DesktopAgentButton />
+            </div>
+            <div className='min-h-0 flex-1'>
+              <UsersTable />
+            </div>
+          </div>
         </SectionPageLayout.Content>
       </SectionPageLayout>
 

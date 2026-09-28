@@ -41,6 +41,7 @@ import { useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
+import { DesktopAgentButton } from '@/components/desktop-agent-button'
 import { SectionPageLayout } from '@/components/layout'
 import {
   CardStaggerContainer,
@@ -647,6 +648,9 @@ export function OverviewDashboard() {
       </SectionPageLayout.Actions>
       <SectionPageLayout.Content>
         <div className='flex flex-col gap-4'>
+          <div className='flex justify-center'>
+            <DesktopAgentButton />
+          </div>
           <div id={setupGuideId} hidden={!setupGuideExpanded}>
             {setupGuideExpanded && (
               <CardStaggerContainer className='grid items-stretch gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]'>

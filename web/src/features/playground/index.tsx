@@ -16,6 +16,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { DesktopAgentButton } from '@/components/desktop-agent-button'
+
 import { PlaygroundChat } from './components/chat/playground-chat'
 import { PlaygroundInput } from './components/input/playground-input'
 import {
@@ -76,6 +78,10 @@ export function Playground() {
 
   return (
     <div className='relative flex size-full min-h-0 flex-col overflow-hidden'>
+      <div className='mx-auto flex w-full max-w-4xl shrink-0 justify-center px-4 pt-4'>
+        <DesktopAgentButton />
+      </div>
+
       {/* Full-width scroll container: scrolling works even over side whitespace */}
       <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
         <PlaygroundChat

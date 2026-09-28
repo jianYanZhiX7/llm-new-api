@@ -229,7 +229,7 @@ export function DeepChat() {
 
           <div className='mx-auto mt-10 max-w-7xl px-6 sm:mt-14'>
             <img
-              src='/deepchat.png'
+              src='/deepchat.jpg'
               alt='DeepChat 桌面客户端界面'
               className='w-full rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.12)]'
               loading='eager'

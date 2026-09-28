@@ -20,6 +20,7 @@ import { Link2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { DesktopAgentButton } from '@/components/desktop-agent-button'
 import { SectionPageLayout } from '@/components/layout/components/section-page-layout'
 import { Button } from '@/components/ui/button'
 import {
@@ -142,7 +143,12 @@ export function Security() {
         {t('Security & Access')}
       </SectionPageLayout.Title>
       <SectionPageLayout.Content>
-        <div className='mx-auto w-full max-w-7xl'>{content}</div>
+        <div className='mx-auto w-full max-w-7xl'>
+          <div className='mb-4 flex justify-center'>
+            <DesktopAgentButton />
+          </div>
+          {content}
+        </div>
       </SectionPageLayout.Content>
     </SectionPageLayout>
   )

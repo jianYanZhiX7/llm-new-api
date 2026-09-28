@@ -172,6 +172,13 @@ export function ClassicHome() {
             {t('Model Pricing')}
             <span className='home-cta-arrow'>›</span>
           </Link>
+          <Link
+            to='/deepchat'
+            className='home-apple-button home-apple-button-secondary'
+          >
+            桌面端Agent智能体
+            <span className='home-cta-arrow'>›</span>
+          </Link>
           {isDemoSiteMode && version && (
             <a
               href='https://github.com/QuantumNous/new-api'

@@ -21,6 +21,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { useState, useCallback, useMemo, lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { DesktopAgentButton } from '@/components/desktop-agent-button'
 import { SectionPageLayout } from '@/components/layout'
 import { FadeIn } from '@/components/page-transition'
 import { Button } from '@/components/ui/button'
@@ -326,6 +327,9 @@ export function Dashboard() {
       <SectionPageLayout.Title>{t(meta.titleKey)}</SectionPageLayout.Title>
       <SectionPageLayout.Content>
         <div className='space-y-3 sm:space-y-4'>
+          <div className='flex justify-center'>
+            <DesktopAgentButton />
+          </div>
           <div className='flex flex-wrap items-center justify-between gap-1.5 sm:gap-2'>
             {showSectionTabs ? (
               <Tabs value={activeSection} onValueChange={handleSectionChange}>

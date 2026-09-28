@@ -22,6 +22,7 @@ import { Plus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { DesktopAgentButton } from '@/components/desktop-agent-button'
 import { SectionPageLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -128,6 +129,9 @@ function ModelsContent() {
         <SectionPageLayout.Actions>{actions}</SectionPageLayout.Actions>
         <SectionPageLayout.Content>
           <div className='flex h-full min-h-0 flex-col gap-4'>
+            <div className='flex shrink-0 justify-center'>
+              <DesktopAgentButton />
+            </div>
             <Tabs value={activeSection} onValueChange={handleSectionChange}>
               <TabsList className='max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto'>
                 {MODELS_SECTION_IDS.map((section) => (

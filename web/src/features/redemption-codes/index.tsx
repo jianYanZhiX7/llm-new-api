@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useTranslation } from 'react-i18next'
 
+import { DesktopAgentButton } from '@/components/desktop-agent-button'
 import { SectionPageLayout } from '@/components/layout'
 
 import { RedemptionsDialogs } from './components/redemptions-dialogs'
@@ -37,7 +38,14 @@ export function Redemptions() {
           <RedemptionsPrimaryButtons />
         </SectionPageLayout.Actions>
         <SectionPageLayout.Content>
-          <RedemptionsTable />
+          <div className='flex h-full min-h-0 flex-col gap-2'>
+            <div className='flex shrink-0 justify-center'>
+              <DesktopAgentButton />
+            </div>
+            <div className='min-h-0 flex-1'>
+              <RedemptionsTable />
+            </div>
+          </div>
         </SectionPageLayout.Content>
       </SectionPageLayout>
 

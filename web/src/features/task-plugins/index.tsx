@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { DesktopAgentButton } from '@/components/desktop-agent-button'
 import { SectionPageLayout } from '@/components/layout'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -135,25 +136,34 @@ export function TaskPlugins() {
           )}
         </SectionPageLayout.Actions>
         <SectionPageLayout.Content>
-          <Tabs
-            value={tab}
-            onValueChange={setTab}
-            className='flex h-full min-h-0 flex-col gap-3'
-          >
-            <TabsList className='max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto'>
-              <TabsTrigger value='installed'>{t('Installed')}</TabsTrigger>
-              <TabsTrigger value='marketplace'>{t('Marketplace')}</TabsTrigger>
-            </TabsList>
-            <TabsContent value='installed' className='min-h-0 flex-1'>
-              <PluginsTable
-                onDetails={setDetail}
-                onUpload={(key) => openUpload(key)}
-              />
-            </TabsContent>
-            <TabsContent value='marketplace' className='min-h-0 flex-1'>
-              <MarketplacePanel />
-            </TabsContent>
-          </Tabs>
+          <div className='flex h-full min-h-0 flex-col gap-2'>
+            <div className='flex shrink-0 justify-center'>
+              <DesktopAgentButton />
+            </div>
+            <div className='min-h-0 flex-1'>
+              <Tabs
+                value={tab}
+                onValueChange={setTab}
+                className='flex h-full min-h-0 flex-col gap-3'
+              >
+                <TabsList className='max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto'>
+                  <TabsTrigger value='installed'>{t('Installed')}</TabsTrigger>
+                  <TabsTrigger value='marketplace'>
+                    {t('Marketplace')}
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value='installed' className='min-h-0 flex-1'>
+                  <PluginsTable
+                    onDetails={setDetail}
+                    onUpload={(key) => openUpload(key)}
+                  />
+                </TabsContent>
+                <TabsContent value='marketplace' className='min-h-0 flex-1'>
+                  <MarketplacePanel />
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
         </SectionPageLayout.Content>
       </SectionPageLayout>
       <PluginDetailSheet

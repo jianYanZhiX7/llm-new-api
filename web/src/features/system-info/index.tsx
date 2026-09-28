@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useTranslation } from 'react-i18next'
 
+import { DesktopAgentButton } from '@/components/desktop-agent-button'
 import { SectionPageLayout } from '@/components/layout'
 import { Badge } from '@/components/ui/badge'
 
@@ -39,6 +40,9 @@ export function SystemInfo() {
       </SectionPageLayout.Title>
       <SectionPageLayout.Content>
         <div className='space-y-4'>
+          <div className='flex justify-center'>
+            <DesktopAgentButton />
+          </div>
           <SystemInstancesPanel />
           <SystemTasksPanel />
         </div>

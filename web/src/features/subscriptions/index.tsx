@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { Info } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { DesktopAgentButton } from '@/components/desktop-agent-button'
 import { SectionPageLayout } from '@/components/layout'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
@@ -55,6 +56,9 @@ function SubscriptionsContent() {
         </SectionPageLayout.Actions>
         <SectionPageLayout.Content>
           <div className='flex h-full min-h-0 flex-col gap-4'>
+            <div className='flex shrink-0 justify-center'>
+              <DesktopAgentButton />
+            </div>
             {!complianceConfirmed ? (
               <Alert variant='destructive' className='shrink-0'>
                 <AlertDescription>

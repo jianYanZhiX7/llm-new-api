@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { DesktopAgentButton } from '@/components/desktop-agent-button'
 import { PublicLayout } from '@/components/layout'
 import { PageTransition } from '@/components/page-transition'
 
@@ -200,6 +201,9 @@ export function Pricing() {
               )}
               className='mx-auto mt-4 max-w-2xl sm:mt-6'
             />
+            <div className='mt-4 flex justify-center sm:mt-5'>
+              <DesktopAgentButton />
+            </div>
           </header>
 
           <div className='grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]'>

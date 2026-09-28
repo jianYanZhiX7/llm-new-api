@@ -21,6 +21,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowRight, BookOpen } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { DesktopAgentButton } from '@/components/desktop-agent-button'
 import { Button } from '@/components/ui/button'
 import { useStatus } from '@/hooks/use-status'
 
@@ -167,6 +168,7 @@ export function Hero(props: HeroProps) {
                 {renderDocsButton()}
               </>
             )}
+            <DesktopAgentButton />
           </div>
 
           {/* Supported Apps (参考图二样式，进行卡片化和信息扩充设计，增加视觉高度) */}
