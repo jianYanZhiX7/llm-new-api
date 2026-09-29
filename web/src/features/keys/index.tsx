@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { DesktopAgentButton } from '@/components/desktop-agent-button'
 import { SectionPageLayout } from '@/components/layout'
 
+import { ApiEndpointsHint } from './components/api-endpoints-hint'
 import { ApiKeysDialogs } from './components/api-keys-dialogs'
 import { ApiKeysPrimaryButtons } from './components/api-keys-primary-buttons'
 import { ApiKeysProvider } from './components/api-keys-provider'
@@ -37,6 +38,7 @@ export function ApiKeys() {
         </SectionPageLayout.Actions>
         <SectionPageLayout.Content>
           <div className='flex h-full min-h-0 flex-col gap-2'>
+            <ApiEndpointsHint className='shrink-0' />
             <div className='flex shrink-0 justify-center'>
               <DesktopAgentButton />
             </div>
