@@ -56,7 +56,9 @@ func (c *Client) newRequest(method, path string, body any, token string) (*http.
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	req.Header.Set("Authorization", "Bearer "+token)
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
 	return req, nil
 }
 
@@ -85,19 +87,38 @@ func (c *Client) relayDo(method, path string, body any) (json.RawMessage, error)
 }
 
 func (c *Client) execute(req *http.Request) ([]byte, error) {
+	status, raw, err := c.send(req)
+	if err != nil {
+		return nil, err
+	}
+	if status >= 400 {
+		return nil, fmt.Errorf("HTTP %d: %s", status, truncate(string(raw), 500))
+	}
+	return raw, nil
+}
+
+func (c *Client) relayRaw(method, path string, body any, headers map[string]string) (int, []byte, error) {
+	req, err := c.newRequest(method, path, body, "")
+	if err != nil {
+		return 0, nil, err
+	}
+	for name, value := range headers {
+		req.Header.Set(name, value)
+	}
+	return c.send(req)
+}
+
+func (c *Client) send(req *http.Request) (int, []byte, error) {
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("http request: %w", err)
+		return 0, nil, fmt.Errorf("http request: %w", err)
 	}
 	defer resp.Body.Close()
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("read response: %w", err)
+		return resp.StatusCode, nil, fmt.Errorf("read response: %w", err)
 	}
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, truncate(string(raw), 500))
-	}
-	return raw, nil
+	return resp.StatusCode, raw, nil
 }
 
 func (c *Client) AddChannel(channel map[string]any) (int, error) {

@@ -24,6 +24,26 @@ Generate a PAT in the new-api dashboard: log in as admin and open the profile pa
 
 Generate a user API key on the tokens page (`/token`): "Add Token", then copy the `sk-...` value.
 
+## Configured Instance
+
+The live gateway this repository deploys to is `https://www.aigotoken.com/`.
+Its credentials are exported in `~/.bashrc` on the deployment host:
+
+```bash
+export NEW_API_SERVER="https://www.aigotoken.com/"
+export NEW_API_TOKEN="<root PAT>"          # value in ~/.bashrc
+export NEW_API_USER_TOKEN="sk-<user key>"  # value in ~/.bashrc
+```
+
+Run `source ~/.bashrc` (or re-open the shell) before invoking any
+`new-api-deployer` command, so the three variables are present.
+
+The real values are deliberately not recorded here. `NEW_API_TOKEN` is a root
+PAT and `NEW_API_USER_TOKEN` is a user API key, and this file is tracked by
+git, so writing them down would publish live credentials. Read them from
+`~/.bashrc` when needed. `NEW_API_TOKEN` also rotates on every call to
+`GET /api/user/token`, so re-read it from `~/.bashrc` after a rotation.
+
 ## Quick Start
 
 ```bash
@@ -95,6 +115,30 @@ USD per 1M tokens.
 ./new-api-deployer list-prices
 ```
 
+### 7. Verify the whole model list on both relay endpoints
+
+```bash
+./new-api-deployer verify-endpoints
+```
+
+Fetches the models visible to the user token, then probes each one on both
+`/v1/chat/completions` (OpenAI format) and `/v1/messages` (Anthropic format).
+A model passes only when both endpoints return a valid payload. Exits
+non-zero when any check fails, so it can gate a deployment.
+
+```
+MODEL                 openai                    anthropic
+------------------------------------------------------------------------
+Kimi-K2.6             ok 1.098s                 ok 826ms
+GLM-5.2               ok 950ms                  FAIL HTTP 503
+
+Failures (1)
+  GLM-5.2 @ anthropic: HTTP 503: model_not_found: No available channel for model GLM-5.2
+```
+
+Flags: `--prompt` (default `ping`), `--max-tokens` (default `5`),
+`--concurrency` (default `4`).
+
 ## Commands
 
 ### `add-channel`
@@ -133,6 +177,25 @@ Flags:
 ### `list-models`
 
 Lists all model IDs visible to the user token via `/v1/models`.
+
+### `verify-endpoints`
+
+```
+Flags:
+      --prompt string        test prompt message (default "ping")
+      --max-tokens int       max tokens for the test response (default 5)
+      --concurrency int      endpoints probed in parallel (default 4)
+```
+
+Reads the model list from `/v1/models` and sends one minimal request per model
+to each endpoint in `relayEndpoints` (OpenAI `/v1/chat/completions` with
+`Authorization: Bearer`, Anthropic `/v1/messages` with `x-api-key` and
+`anthropic-version`). Each response is checked for transport success (HTTP 2xx)
+and payload validity (`choices` for OpenAI, a `message` with content blocks for
+Anthropic); an `error` object in the body fails the check even on HTTP 200.
+Checks are ordered model-major, endpoint-minor. Results are printed as a table
+plus a failure detail list, and the command returns a non-zero exit code when
+any check fails. Requires a user API key, not a PAT.
 
 ### `set-price`
 
@@ -197,10 +260,12 @@ deployer/
 ├── main.go             entry point
 ├── root.go             root command, global flags, channel type map
 ├── client.go           HTTP client wrapping admin + relay API
+├── relay_endpoint.go   relay endpoint definitions and response validators
 ├── pricing.go          option map fetch/update helpers
 ├── add_channel.go      add-channel command
 ├── test_channel.go     test-channel command
 ├── verify_model.go     verify-model command
+├── verify_endpoints.go verify-endpoints command
 ├── list_models.go      list-models command
 ├── set_price.go        set-price command
 ├── list_prices.go      list-prices command

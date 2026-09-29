@@ -78,15 +78,16 @@ var rootCmd = &cobra.Command{
 on a new-api gateway instance through its REST API, without touching the web UI.
 
 Core operations:
-  add-channel     Create a new channel (models become user-accessible instantly)
-  test-channel    Test channel connectivity and key validity
-  verify-model    End-to-end verify a model responds to a chat request
-  list-models     List models visible to a user token
+  add-channel       Create a new channel (models become user-accessible instantly)
+  test-channel      Test channel connectivity and key validity
+  verify-model      End-to-end verify a model responds to a chat request
+  verify-endpoints  Verify every published model against every relay endpoint
+  list-models       List models visible to a user token
 
 Authentication:
   Admin operations (add-channel, test-channel) require a Personal Access Token (PAT)
-  from an admin/root user. Relay operations (verify-model, list-models) require a
-  user API key (sk-...).
+  from an admin/root user. Relay operations (verify-model, verify-endpoints,
+  list-models) require a user API key (sk-...).
 
   Set credentials via flags or environment variables:
     NEW_API_SERVER      Server base URL

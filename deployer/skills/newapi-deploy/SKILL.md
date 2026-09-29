@@ -65,6 +65,9 @@ Follow this checklist for every "deploy a new model/channel" request:
 - [ ] 3. `set-price` — only if the user asked for pricing
 - [ ] 4. `verify-model` — end-to-end confirmation through the relay
 - [ ] 5. `list-models` — only if the user wants to see what's now visible
+- [ ] 6. `verify-endpoints` — when the user asks whether the published models
+  actually work, or wants a health sweep of the whole list; probes every model
+  on both the OpenAI and Anthropic relay endpoints
 
 Stop and report to the user if any step fails; do not continue deploying on
 top of a broken channel.
@@ -143,6 +146,27 @@ the exact relay path a real caller uses (auth, routing, billing).
 ```bash
 ./deployer/new-api-deployer list-models
 ```
+
+### 6. Verify the whole list on both relay endpoints
+
+```bash
+./deployer/new-api-deployer verify-endpoints
+```
+
+Reads `/v1/models` and sends one minimal request per model to
+`/v1/chat/completions` (OpenAI format, `Authorization: Bearer`) and
+`/v1/messages` (Anthropic format, `x-api-key` + `anthropic-version`). Prints a
+per-model table with latency, a failure detail list, and exits non-zero if any
+check fails — useful as a deployment gate and for answering "does this model
+really work?".
+
+The Anthropic probe is a genuine protocol test: it sends `x-api-key` with no
+`Authorization` header, exactly like an Anthropic SDK client, so a server that
+only accepts Bearer tokens on `/v1/messages` is reported as failing.
+
+Flags: `--prompt` (default `ping`), `--max-tokens` (default `5`),
+`--concurrency` (default `4`). Note that `/v1/messages/count_tokens` is not part
+of the sweep — that sub-endpoint is disabled server-side and always 404s.
 
 ## Pricing research & batch updates
 
