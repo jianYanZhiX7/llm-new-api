@@ -55,3 +55,6 @@ deploy.sh
 deploy_restart.sh
 test.sh
 域名.txt
+
+# DeepChat installer version source, refreshed from the deepchat repository by deploy.sh.
+deepchat-package.json

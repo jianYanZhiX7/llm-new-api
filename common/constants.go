@@ -181,6 +181,14 @@ var GeminiSafetySetting string
 // https://docs.cohere.com/docs/safety-modes Type; NONE/CONTEXTUAL/STRICT
 var CohereSafetySetting string
 
+var TOSAccessKey string
+var TOSSecretKey string
+var TOSEndpoint string
+var TOSRegion string
+var TOSBucket string
+
+var DeepChatPackageJSONPath string
+
 const (
 	RequestIdKey         = "X-Oneapi-Request-Id"
 	UpstreamRequestIdKey = "X-Upstream-Request-Id"

@@ -118,6 +118,12 @@ func InitEnv() {
 	// Initialize string variables with GetEnvOrDefaultString
 	GeminiSafetySetting = GetEnvOrDefaultString("GEMINI_SAFETY_SETTING", "BLOCK_NONE")
 	CohereSafetySetting = GetEnvOrDefaultString("COHERE_SAFETY_SETTING", "NONE")
+	TOSAccessKey = GetEnvOrDefaultString("TOS_ACCESS_KEY", "")
+	TOSSecretKey = GetEnvOrDefaultString("TOS_SECRET_KEY", "")
+	TOSEndpoint = GetEnvOrDefaultString("TOS_ENDPOINT", "")
+	TOSRegion = GetEnvOrDefaultString("TOS_REGION", "")
+	TOSBucket = GetEnvOrDefaultString("TOS_BUCKET", "")
+	DeepChatPackageJSONPath = GetEnvOrDefaultString("DEEPCHAT_PACKAGE_JSON_PATH", "")
 
 	// Initialize rate limit variables
 	GlobalApiRateLimitEnable = GetEnvOrDefaultBool("GLOBAL_API_RATE_LIMIT_ENABLE", true)

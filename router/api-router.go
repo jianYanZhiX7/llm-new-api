@@ -60,6 +60,8 @@ func SetApiRouter(router *gin.Engine) {
 		// OAuth provider endpoints (llm-new-api acting as OAuth provider for desktop clients)
 		SetOAuthProviderRoutes(apiRouter)
 		apiRouter.GET("/ratio_config", middleware.CriticalRateLimit(), controller.GetRatioConfig)
+		apiRouter.GET("/deepchat/download/status", middleware.DisableCache(), controller.DeepChatDownloadStatus)
+		apiRouter.GET("/deepchat/download", middleware.UserAuth(), middleware.CriticalRateLimit(), middleware.DisableCache(), controller.DeepChatDownload)
 
 		apiRouter.POST("/stripe/webhook", anonymousRequestBodyLimit, controller.StripeWebhook)
 		apiRouter.POST("/creem/webhook", anonymousRequestBodyLimit, controller.CreemWebhook)
