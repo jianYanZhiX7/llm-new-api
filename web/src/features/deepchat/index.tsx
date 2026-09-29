@@ -30,6 +30,7 @@ import {
 
 import { PublicLayout } from '@/components/layout'
 
+import { DeepChatDownloadButtons } from './download-buttons'
 import { TypewriterText } from './typewriter-text'
 
 type Feature = {
@@ -225,6 +226,8 @@ export function DeepChat() {
             <p className='mt-2 text-[19px] leading-[1.3] font-normal tracking-[0.009em] sm:text-2xl'>
               开箱即用的 Agent 桌面客户端，我帮你<RotatingWord />
             </p>
+
+            <DeepChatDownloadButtons />
           </div>
 
           <div className='mx-auto mt-10 max-w-7xl px-6 sm:mt-14'>
