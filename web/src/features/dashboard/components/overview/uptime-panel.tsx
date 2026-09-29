@@ -17,17 +17,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Activity, RotateCw } from 'lucide-react'
-import { memo, useEffect, useState } from 'react'
+import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { IconBadge } from '@/components/ui/icon-badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { getUptimeStatus } from '@/features/dashboard/api'
-import type {
-  UptimeGroupResult,
-  UptimeMonitor,
-} from '@/features/dashboard/types'
+import { useUptimeStatus } from '@/features/dashboard/hooks/use-uptime-status'
+import type { UptimeMonitor } from '@/features/dashboard/types'
 import { cn } from '@/lib/utils'
 
 import { PanelWrapper } from '../ui/panel-wrapper'
@@ -47,52 +44,7 @@ const StatusDot = memo(function StatusDot(props: { status: number }) {
 
 export function UptimePanel() {
   const { t } = useTranslation()
-  const [groups, setGroups] = useState<UptimeGroupResult[]>([])
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-
-  useEffect(() => {
-    const abortController = new AbortController()
-
-    void getUptimeStatus()
-      .then((res) => {
-        if (abortController.signal.aborted) return
-        setGroups(res?.data || [])
-      })
-      .catch(() => {
-        if (abortController.signal.aborted) return
-        setGroups([])
-      })
-      .finally(() => {
-        if (!abortController.signal.aborted) {
-          setLoading(false)
-        }
-      })
-
-    return () => {
-      abortController.abort()
-    }
-  }, [])
-
-  const handleRefresh = () => {
-    const abortController = new AbortController()
-    setRefreshing(true)
-
-    void getUptimeStatus()
-      .then((res) => {
-        if (abortController.signal.aborted) return
-        setGroups(res?.data || [])
-      })
-      .catch(() => {
-        if (abortController.signal.aborted) return
-        setGroups([])
-      })
-      .finally(() => {
-        if (!abortController.signal.aborted) {
-          setRefreshing(false)
-        }
-      })
-  }
+  const { groups, loading, refreshing, refresh } = useUptimeStatus(true)
 
   return (
     <PanelWrapper
@@ -114,7 +66,7 @@ export function UptimePanel() {
         <Button
           variant='ghost'
           size='sm'
-          onClick={handleRefresh}
+          onClick={() => void refresh()}
           disabled={refreshing}
           className='size-7 p-0'
         >

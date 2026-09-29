@@ -177,6 +177,21 @@ describe('overview setup guide', () => {
     expect(screen.queryByText('Setup guide complete')).not.toBeInTheDocument()
   })
 
+  it('starts collapsed for an incomplete setup on the first visit', async () => {
+    useAuthStore
+      .getState()
+      .auth.setUser({ id: 1, username: 'new-user', role: 1 })
+    await renderOverview()
+
+    expect(await screen.findByText('Setup progress: 1/3')).toBeVisible()
+    expect(
+      screen.getByText('Setup guide is collapsed. Expand it anytime.')
+    ).toBeVisible()
+    expect(
+      screen.queryByRole('button', { name: 'Hide setup guide' })
+    ).not.toBeInTheDocument()
+  })
+
   it('keeps the existing progress banner when an incomplete guide is manually collapsed', async () => {
     const user = userEvent.setup()
     useAuthStore
@@ -184,6 +199,8 @@ describe('overview setup guide', () => {
       .auth.setUser({ id: 1, username: 'new-user', role: 1 })
     await renderOverview()
 
+    expect(await screen.findByText('Setup progress: 1/3')).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Show setup guide' }))
     await user.click(
       await screen.findByRole('button', { name: 'Hide setup guide' })
     )
@@ -231,8 +248,9 @@ describe('overview setup guide', () => {
     keyLookupError = new Error('Key lookup unavailable')
     await renderOverview()
 
+    expect(await screen.findByText('Setup progress: 2/3')).toBeVisible()
     expect(
-      await screen.findByRole('button', { name: 'Hide setup guide' })
+      screen.getByRole('button', { name: 'Show setup guide' })
     ).toBeVisible()
     expect(
       screen.queryByRole('button', { name: 'Setup guide' })
