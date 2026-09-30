@@ -56,6 +56,7 @@ const headerNavSchema = z.object({
   rankingsEnabled: z.boolean(),
   rankingsRequireAuth: z.boolean(),
   docs: z.boolean(),
+  apiHelp: z.boolean(),
   about: z.boolean(),
 })
 
@@ -91,6 +92,10 @@ const toFormValues = (config: HeaderNavModulesConfig): HeaderNavFormValues => ({
       : Boolean(config.rankings.requireAuth),
   docs:
     config.docs === undefined ? HEADER_NAV_DEFAULT.docs : Boolean(config.docs),
+  apiHelp:
+    config.apiHelp === undefined
+      ? HEADER_NAV_DEFAULT.apiHelp
+      : Boolean(config.apiHelp),
   about:
     config.about === undefined
       ? HEADER_NAV_DEFAULT.about
@@ -120,6 +125,7 @@ export function HeaderNavigationSection({
       home: values.home,
       console: values.console,
       docs: values.docs,
+      apiHelp: values.apiHelp,
       about: values.about,
       pricing: {
         ...(config.pricing ?? HEADER_NAV_DEFAULT.pricing),
@@ -167,6 +173,11 @@ export function HeaderNavigationSection({
       key: 'docs',
       title: t('Docs'),
       description: t('Documentation or external knowledge base.'),
+    },
+    {
+      key: 'apiHelp',
+      title: 'API 帮助文档',
+      description: 'OpenAI 与 Anthropic 接口接入说明页面。',
     },
     {
       key: 'about',

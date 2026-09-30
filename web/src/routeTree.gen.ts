@@ -30,6 +30,7 @@ import { Route as AuthenticatedChat2linkRouteImport } from './routes/_authentica
 import { Route as AuthenticatedSystemSettingsRouteRouteImport } from './routes/_authenticated/system-settings/route'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as DeepchatIndexRouteImport } from './routes/deepchat/index'
+import { Route as MyHelpDocApiHelpRouteImport } from './routes/my-help/doc-api-help'
 import { Route as OauthProviderRouteImport } from './routes/oauth/$provider'
 import { Route as OauthAuthorizeRouteImport } from './routes/oauth/authorize'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
@@ -175,6 +176,11 @@ const AboutIndexRoute = AboutIndexRouteImport.update({
 const DeepchatIndexRoute = DeepchatIndexRouteImport.update({
   id: '/deepchat/',
   path: '/deepchat/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyHelpDocApiHelpRoute = MyHelpDocApiHelpRouteImport.update({
+  id: '/my-help/doc-api-help',
+  path: '/my-help/doc-api-help',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OauthProviderRoute = OauthProviderRouteImport.update({
@@ -438,6 +444,7 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/chat2link': typeof AuthenticatedChat2linkRoute
+  '/my-help/doc-api-help': typeof MyHelpDocApiHelpRoute
   '/oauth/$provider': typeof OauthProviderRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/about/': typeof AboutIndexRoute
@@ -500,6 +507,7 @@ export interface FileRoutesByTo {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/chat2link': typeof AuthenticatedChat2linkRoute
+  '/my-help/doc-api-help': typeof MyHelpDocApiHelpRoute
   '/oauth/$provider': typeof OauthProviderRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/about': typeof AboutIndexRoute
@@ -566,6 +574,7 @@ export interface FileRoutesById {
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
   '/_authenticated/chat2link': typeof AuthenticatedChat2linkRoute
+  '/my-help/doc-api-help': typeof MyHelpDocApiHelpRoute
   '/oauth/$provider': typeof OauthProviderRoute
   '/oauth/authorize': typeof OauthAuthorizeRoute
   '/about/': typeof AboutIndexRoute
@@ -631,6 +640,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/chat2link'
+    | '/my-help/doc-api-help'
     | '/oauth/$provider'
     | '/oauth/authorize'
     | '/about/'
@@ -693,6 +703,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/chat2link'
+    | '/my-help/doc-api-help'
     | '/oauth/$provider'
     | '/oauth/authorize'
     | '/about'
@@ -758,6 +769,7 @@ export interface FileRouteTypes {
     | '/(errors)/500'
     | '/(errors)/503'
     | '/_authenticated/chat2link'
+    | '/my-help/doc-api-help'
     | '/oauth/$provider'
     | '/oauth/authorize'
     | '/about/'
@@ -815,6 +827,7 @@ export interface RootRouteChildren {
   errors404Route: typeof errors404Route
   errors500Route: typeof errors500Route
   errors503Route: typeof errors503Route
+  MyHelpDocApiHelpRoute: typeof MyHelpDocApiHelpRoute
   OauthProviderRoute: typeof OauthProviderRoute
   OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   AboutIndexRoute: typeof AboutIndexRoute
@@ -972,6 +985,13 @@ declare module '@tanstack/react-router' {
       path: '/deepchat'
       fullPath: '/deepchat/'
       preLoaderRoute: typeof DeepchatIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-help/doc-api-help': {
+      id: '/my-help/doc-api-help'
+      path: '/my-help/doc-api-help'
+      fullPath: '/my-help/doc-api-help'
+      preLoaderRoute: typeof MyHelpDocApiHelpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/oauth/$provider': {
@@ -1420,6 +1440,7 @@ const rootRouteChildren: RootRouteChildren = {
   errors404Route: errors404Route,
   errors500Route: errors500Route,
   errors503Route: errors503Route,
+  MyHelpDocApiHelpRoute: MyHelpDocApiHelpRoute,
   OauthProviderRoute: OauthProviderRoute,
   OauthAuthorizeRoute: OauthAuthorizeRoute,
   AboutIndexRoute: AboutIndexRoute,

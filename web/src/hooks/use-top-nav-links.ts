@@ -104,6 +104,10 @@ export function useTopNavLinks(): TopNavLink[] {
     }
   }
 
+  if (modules?.apiHelp !== false) {
+    links.push({ title: 'API 帮助文档', href: '/my-help/doc-api-help' })
+  }
+
   // About
   if (modules?.about !== false) {
     links.push({ title: t('About'), href: '/about' })
