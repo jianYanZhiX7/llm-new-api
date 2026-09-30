@@ -695,6 +695,10 @@ For commercial licensing, please contact support@quantumnous.com
   --radius: 1rem;
 }
 
+body[data-theme-preset]:not([data-theme-radius]) {
+  --radius: 0.375rem;
+}
+
 /* ── Density scale ────────────────────────────────────────────────────── */
 /* `sm` = compact UI; `lg` = comfortable; `xl` = extra readable. Default keeps Tailwind defaults. */
 [data-theme-scale='sm'] {
