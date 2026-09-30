@@ -52,7 +52,12 @@ export function getDashboardChartColors(domainLength: number): string[] {
 
 function renderQuotaCompat(rawQuota: number, digits = 4): string {
   const { config, meta } = getCurrencyDisplay()
-  if (meta.kind === 'tokens') return rawQuota.toLocaleString()
+  if (meta.kind === 'tokens') {
+    return Intl.NumberFormat(undefined, {
+      maximumFractionDigits: 0,
+      useGrouping: false,
+    }).format(rawQuota)
+  }
   const usd = rawQuota / config.quotaPerUnit
   const rate = 'exchangeRate' in meta ? meta.exchangeRate : 1
   const symbol = 'symbol' in meta ? meta.symbol : '$'
@@ -77,7 +82,10 @@ export function processChartData(
   const otherLabel = tt('Other')
 
   const formatInt = (value: number) =>
-    Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(value)
+    Intl.NumberFormat(undefined, {
+      maximumFractionDigits: 0,
+      useGrouping: false,
+    }).format(value)
   const formatQuotaValue = (value: number) => renderQuotaCompat(value, 4)
   const formatQuotaTotal = (value: number) => renderQuotaCompat(value, 2)
 

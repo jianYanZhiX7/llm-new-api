@@ -248,9 +248,10 @@ function toggleSelectedNodeFilter(
 }
 
 function formatFlowMetricNumber(value: number): string {
-  return Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(
-    value
-  )
+  return Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 0,
+    useGrouping: false,
+  }).format(value)
 }
 
 export function FlowCharts(props: FlowChartsProps) {
@@ -396,7 +397,9 @@ export function FlowCharts(props: FlowChartsProps) {
   const metricLabel = t(FLOW_METRIC_LABEL_KEYS[metric])
   const formatNodeMetricValue = useCallback(
     (value: number) =>
-      metric === 'quota' ? formatQuota(value) : formatFlowMetricNumber(value),
+      metric === 'quota'
+        ? formatQuota(value, { useGrouping: false })
+        : formatFlowMetricNumber(value),
     [metric]
   )
   // Explicit filters (the chips/dropdown control) narrow the rows that feed the
@@ -456,12 +459,17 @@ export function FlowCharts(props: FlowChartsProps) {
   const chartTitle = t('Flow')
   const flowSpec = useMemo(
     () =>
-      buildFlowSankeySpec(flowData.flow, chartTitle, formatQuota, {
-        quota: t('Quota'),
-        tokens: t('Tokens'),
-        requests: t('Requests'),
-        share: t('Share'),
-      }),
+      buildFlowSankeySpec(
+        flowData.flow,
+        chartTitle,
+        (value) => formatQuota(value, { useGrouping: false }),
+        {
+          quota: t('Quota'),
+          tokens: t('Tokens'),
+          requests: t('Requests'),
+          share: t('Share'),
+        }
+      ),
     [chartTitle, flowData.flow, t]
   )
   const chartTheme = resolvedTheme === 'dark' ? 'dark' : 'light'

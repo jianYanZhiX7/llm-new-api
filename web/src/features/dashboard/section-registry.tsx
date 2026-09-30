@@ -37,6 +37,7 @@ const DASHBOARD_SECTIONS = [
   {
     id: 'flow',
     titleKey: 'Flow',
+    adminOnly: true,
     build: () => null,
   },
   {
@@ -49,7 +50,7 @@ const DASHBOARD_SECTIONS = [
 
 export type DashboardSectionId = (typeof DASHBOARD_SECTIONS)[number]['id']
 
-const ADMIN_ONLY_SECTIONS = new Set<string>(['users'])
+const ADMIN_ONLY_SECTIONS = new Set<string>(['flow', 'users'])
 
 const dashboardRegistry = createSectionRegistry<
   DashboardSectionId,
@@ -64,6 +65,8 @@ const dashboardRegistry = createSectionRegistry<
 
 export const DASHBOARD_SECTION_IDS = dashboardRegistry.sectionIds
 export const DASHBOARD_DEFAULT_SECTION = dashboardRegistry.defaultSection
+export const DASHBOARD_ADMIN_ONLY_SECTIONS: ReadonlySet<string> =
+  ADMIN_ONLY_SECTIONS
 
 export function getDashboardSectionNavItems(
   t: TFunction,

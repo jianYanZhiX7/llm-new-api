@@ -169,9 +169,7 @@ export function FlowNodeFilterControl(props: FlowNodeFilterControlProps) {
                             </span>
                             <span className='text-muted-foreground flex shrink-0 items-center gap-1 text-xs'>
                               <span>{props.metricLabel}</span>
-                              <span className='font-mono'>
-                                {metricValueLabel}
-                              </span>
+                              <span>{metricValueLabel}</span>
                             </span>
                           </CommandItem>
                         )

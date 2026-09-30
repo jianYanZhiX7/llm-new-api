@@ -829,9 +829,10 @@ function buildFlowGraph(
 }
 
 function formatNumber(value: number): string {
-  return Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(
-    value
-  )
+  return Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 0,
+    useGrouping: false,
+  }).format(value)
 }
 
 function buildUserFilterOptions(

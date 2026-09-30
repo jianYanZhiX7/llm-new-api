@@ -49,6 +49,7 @@ import {
 } from './lib'
 import {
   type DashboardSectionId,
+  DASHBOARD_ADMIN_ONLY_SECTIONS,
   DASHBOARD_DEFAULT_SECTION,
   DASHBOARD_SECTION_IDS,
 } from './section-registry'
@@ -249,7 +250,9 @@ export function Dashboard() {
   const visibleSections = useMemo(
     () =>
       DASHBOARD_SECTION_IDS.filter(
-        (section) => section !== 'overview' && (section !== 'users' || isAdmin)
+        (section) =>
+          section !== 'overview' &&
+          (isAdmin || !DASHBOARD_ADMIN_ONLY_SECTIONS.has(section))
       ),
     [isAdmin]
   )

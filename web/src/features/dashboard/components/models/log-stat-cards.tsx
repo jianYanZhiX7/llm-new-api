@@ -46,7 +46,7 @@ interface LogStatCardsProps {
 const MAX_INLINE_STAT_CHARS = 9
 
 function formatStatNumber(value: number, locale: Intl.LocalesArgument) {
-  const fullValue = formatNumber(value, locale)
+  const fullValue = formatNumber(value, locale, false)
   const displayValue =
     fullValue.length > MAX_INLINE_STAT_CHARS
       ? formatCompactNumber(value, locale)
@@ -127,8 +127,8 @@ export function LogStatCards(props: LogStatCardsProps) {
     const formatted =
       config.key === 'quota'
         ? {
-            displayValue: formatQuota(rawValue),
-            fullValue: formatQuota(rawValue),
+            displayValue: formatQuota(rawValue, { useGrouping: false }),
+            fullValue: formatQuota(rawValue, { useGrouping: false }),
           }
         : formatStatNumber(rawValue, locale)
 
@@ -158,7 +158,7 @@ export function LogStatCards(props: LogStatCardsProps) {
           } else if (error) {
             valueContent = (
               <>
-                <div className='text-muted-foreground mt-1 font-mono text-base leading-tight font-bold tracking-tight tabular-nums sm:mt-2 sm:text-2xl sm:leading-normal'>
+                <div className='text-muted-foreground mt-1 text-base leading-tight font-bold tracking-tight tabular-nums sm:mt-2 sm:text-2xl sm:leading-normal'>
                   --
                 </div>
                 <div className='text-muted-foreground/40 mt-1 hidden text-xs md:block'>
@@ -170,7 +170,7 @@ export function LogStatCards(props: LogStatCardsProps) {
             valueContent = (
               <>
                 <div
-                  className='text-foreground mt-1 max-w-full truncate font-mono text-base leading-tight font-bold tracking-tight tabular-nums sm:mt-2 sm:text-2xl sm:leading-normal'
+                  className='text-foreground mt-1 max-w-full truncate text-base leading-tight font-bold tracking-tight tabular-nums sm:mt-2 sm:text-2xl sm:leading-normal'
                   title={it.fullValue}
                 >
                   {it.value}
