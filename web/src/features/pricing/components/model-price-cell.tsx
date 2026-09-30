@@ -31,7 +31,11 @@ import {
   isUnconfiguredTaskUsageModel,
 } from '../lib/dynamic-price'
 import { isTokenBasedModel } from '../lib/model-helpers'
-import { formatPrice, formatRequestPrice } from '../lib/price'
+import {
+  formatCompactPrice,
+  formatPrice,
+  formatRequestPrice,
+} from '../lib/price'
 import { taskUsageUnitLabel } from '../lib/task-price-display'
 import type { PricingModel, TokenUnit } from '../types'
 
@@ -191,28 +195,32 @@ export function ModelPriceCell(props: {
       metrics = [
         {
           label: t('Input'),
-          value: formatPrice(
-            props.model,
-            'input',
-            tokenUnit,
-            options.showRechargePrice,
-            options.priceRate,
-            options.usdExchangeRate,
-            options.selectedGroup,
-            false
+          value: formatCompactPrice(
+            formatPrice(
+              props.model,
+              'input',
+              tokenUnit,
+              options.showRechargePrice,
+              options.priceRate,
+              options.usdExchangeRate,
+              options.selectedGroup,
+              false
+            )
           ),
         },
         {
           label: t('Output'),
-          value: formatPrice(
-            props.model,
-            'output',
-            tokenUnit,
-            options.showRechargePrice,
-            options.priceRate,
-            options.usdExchangeRate,
-            options.selectedGroup,
-            false
+          value: formatCompactPrice(
+            formatPrice(
+              props.model,
+              'output',
+              tokenUnit,
+              options.showRechargePrice,
+              options.priceRate,
+              options.usdExchangeRate,
+              options.selectedGroup,
+              false
+            )
           ),
         },
       ]
@@ -250,7 +258,7 @@ export function ModelPriceCell(props: {
               {metric.label}
             </span>
             <span
-              className='min-w-0 font-mono text-sm break-words whitespace-normal tabular-nums'
+              className='min-w-0 text-sm break-words whitespace-normal tabular-nums'
               title={metric.value}
             >
               {metric.value}

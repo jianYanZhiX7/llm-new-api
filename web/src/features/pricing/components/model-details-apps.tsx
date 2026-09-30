@@ -57,7 +57,7 @@ function RankBadge(props: { rank: number }) {
   return (
     <span
       className={cn(
-        'inline-flex size-7 shrink-0 items-center justify-center rounded-md font-mono text-xs font-bold tabular-nums',
+        'inline-flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-bold tabular-nums',
         palette
       )}
     >
@@ -80,7 +80,7 @@ function GrowthChip(props: { value: number }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 font-mono text-[11px] font-semibold tabular-nums',
+        'inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums',
         palette
       )}
     >
@@ -128,7 +128,7 @@ export function ModelDetailsApps(props: { model: PricingModel }) {
           <div className='text-muted-foreground text-[10px] font-medium tracking-wider uppercase'>
             {t('Tracked apps')}
           </div>
-          <div className='text-foreground mt-1 font-mono text-lg font-semibold tabular-nums'>
+          <div className='text-foreground mt-1 text-lg font-semibold tabular-nums'>
             {apps.length}
           </div>
           <p className='text-muted-foreground/70 text-[11px]'>
@@ -139,7 +139,7 @@ export function ModelDetailsApps(props: { model: PricingModel }) {
           <div className='text-muted-foreground text-[10px] font-medium tracking-wider uppercase'>
             {t('Monthly tokens')}
           </div>
-          <div className='text-foreground mt-1 font-mono text-lg font-semibold tabular-nums'>
+          <div className='text-foreground mt-1 text-lg font-semibold tabular-nums'>
             {COMPACT_NUMBER.format(totalMonthlyTokens)}
           </div>
           <p className='text-muted-foreground/70 text-[11px]'>

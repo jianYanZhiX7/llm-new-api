@@ -51,7 +51,7 @@ type FilterOption = {
 
 type FilterSectionProps = {
   title: string
-  value: string
+  selected: string[]
   options: FilterOption[]
   onChange: (value: string) => void
 }
@@ -59,12 +59,12 @@ type FilterSectionProps = {
 export interface PricingSidebarProps {
   quotaTypeFilter: string
   endpointTypeFilter: string
-  vendorFilter: string
+  vendorFilters: string[]
   groupFilter: string
   tagFilter: string
   onQuotaTypeChange: (value: string) => void
   onEndpointTypeChange: (value: string) => void
-  onVendorChange: (value: string) => void
+  onVendorToggle: (value: string) => void
   onGroupChange: (value: string) => void
   onTagChange: (value: string) => void
   vendors: PricingVendor[]
@@ -145,7 +145,7 @@ function FilterSection(props: FilterSectionProps) {
             <FilterChip
               key={option.value}
               option={option}
-              active={props.value === option.value}
+              active={props.selected.includes(option.value)}
               onClick={() => props.onChange(option.value)}
             />
           ))}
@@ -286,31 +286,35 @@ export function PricingSidebar(props: PricingSidebarProps) {
       <div className='space-y-1'>
         <FilterSection
           title={t('Groups')}
-          value={props.groupFilter}
+          selected={[props.groupFilter]}
           options={groupOptions}
           onChange={props.onGroupChange}
         />
         <FilterSection
           title={t('All Vendors')}
-          value={props.vendorFilter}
+          selected={
+            props.vendorFilters.length === 0
+              ? [FILTER_ALL]
+              : props.vendorFilters
+          }
           options={vendorOptions}
-          onChange={props.onVendorChange}
+          onChange={props.onVendorToggle}
         />
         <FilterSection
           title={t('Model Tags')}
-          value={props.tagFilter}
+          selected={[props.tagFilter]}
           options={tagOptions}
           onChange={props.onTagChange}
         />
         <FilterSection
           title={t('Pricing Type')}
-          value={props.quotaTypeFilter}
+          selected={[props.quotaTypeFilter]}
           options={quotaOptions}
           onChange={props.onQuotaTypeChange}
         />
         <FilterSection
           title={t('Endpoint Type')}
-          value={props.endpointTypeFilter}
+          selected={[props.endpointTypeFilter]}
           options={endpointOptions}
           onChange={props.onEndpointTypeChange}
         />

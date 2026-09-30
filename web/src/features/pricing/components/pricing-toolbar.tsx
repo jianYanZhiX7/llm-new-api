@@ -48,10 +48,14 @@ import { cn } from '@/lib/utils'
 import { getSortLabels, type SortOption, type ViewMode } from '../constants'
 import type { PricingModel, PricingVendor, TokenUnit } from '../types'
 import { PricingSidebar } from './pricing-sidebar'
+import { SearchBar } from './search-bar'
 
 export interface PricingToolbarProps {
   filteredCount: number
   totalCount?: number
+  searchInput: string
+  onSearchChange: (value: string) => void
+  onSearchClear: () => void
   sortBy: string
   onSortChange: (value: string) => void
   tokenUnit: TokenUnit
@@ -62,12 +66,12 @@ export interface PricingToolbarProps {
   onViewModeChange: (value: ViewMode) => void
   quotaTypeFilter: string
   endpointTypeFilter: string
-  vendorFilter: string
+  vendorFilters: string[]
   groupFilter: string
   tagFilter: string
   onQuotaTypeChange: (value: string) => void
   onEndpointTypeChange: (value: string) => void
-  onVendorChange: (value: string) => void
+  onVendorToggle: (value: string) => void
   onGroupChange: (value: string) => void
   onTagChange: (value: string) => void
   vendors: PricingVendor[]
@@ -88,13 +92,13 @@ export function PricingToolbar(props: PricingToolbarProps) {
   return (
     <div className='bg-card rounded-xl border p-3'>
       <div className='flex flex-wrap items-center justify-between gap-3'>
-        <div className='flex items-center gap-2'>
+        <div className='flex min-w-0 flex-1 items-center gap-2'>
           <Button
             type='button'
             variant='outline'
             size='sm'
             onClick={() => setMobileFiltersOpen(true)}
-            className='gap-1.5 xl:hidden'
+            className='h-10 shrink-0 gap-1.5'
           >
             <Filter className='size-4' />
             {t('Filter')}
@@ -105,18 +109,13 @@ export function PricingToolbar(props: PricingToolbarProps) {
             )}
           </Button>
 
-          <div className='text-muted-foreground flex items-baseline gap-1 text-sm'>
-            <span className='text-foreground font-semibold tabular-nums'>
-              {props.filteredCount.toLocaleString()}
-            </span>
-            <span>{props.filteredCount === 1 ? t('model') : t('models')}</span>
-            {props.totalCount != null &&
-              props.filteredCount !== props.totalCount && (
-                <span className='text-muted-foreground/60 text-xs'>
-                  / {props.totalCount.toLocaleString()}
-                </span>
-              )}
-          </div>
+          <SearchBar
+            value={props.searchInput}
+            onChange={props.onSearchChange}
+            onClear={props.onSearchClear}
+            placeholder={t('Search model name, provider, endpoint, or tag...')}
+            className='max-w-md min-w-40 flex-1'
+          />
         </div>
 
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
@@ -206,12 +205,12 @@ export function PricingToolbar(props: PricingToolbarProps) {
             <PricingSidebar
               quotaTypeFilter={props.quotaTypeFilter}
               endpointTypeFilter={props.endpointTypeFilter}
-              vendorFilter={props.vendorFilter}
+              vendorFilters={props.vendorFilters}
               groupFilter={props.groupFilter}
               tagFilter={props.tagFilter}
               onQuotaTypeChange={props.onQuotaTypeChange}
               onEndpointTypeChange={props.onEndpointTypeChange}
-              onVendorChange={props.onVendorChange}
+              onVendorToggle={props.onVendorToggle}
               onGroupChange={props.onGroupChange}
               onTagChange={props.onTagChange}
               vendors={props.vendors}

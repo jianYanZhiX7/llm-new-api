@@ -55,6 +55,28 @@ export function stripTrailingZeros(formatted: string): string {
 }
 
 /**
+ * Compact a formatted price for list views: whole units at or above 1 keep
+ * only the integer part (floored, never rounded up), values below 1 keep two
+ * decimals with a 0.01 floor. Zero and unparseable values pass through
+ * unchanged so free models are not advertised as 0.01.
+ */
+export function formatCompactPrice(formatted: string): string {
+  const match = formatted.match(/^([^\d-]*)([-\d,]+\.?\d*)(.*)$/)
+  if (!match) return formatted
+
+  const [, symbol, rawNumber, suffix] = match
+  const parsed = Number.parseFloat(rawNumber.replaceAll(',', ''))
+  if (!Number.isFinite(parsed) || parsed <= 0) return formatted
+
+  if (parsed >= 1) {
+    return `${symbol}${Math.floor(parsed)}${suffix}`
+  }
+
+  const flooredToCents = Math.floor(parsed * 100) / 100
+  return `${symbol}${Math.max(0.01, flooredToCents).toFixed(2)}${suffix}`
+}
+
+/**
  * Calculate token price in USD.
  *
  * Returns NaN when the required ratio field is missing/null so callers can

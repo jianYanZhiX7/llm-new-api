@@ -50,14 +50,29 @@ export function filterBySearch(
 }
 
 /**
- * Filter models by vendor
+ * Filter models by vendor. An empty selection means every vendor.
  */
 export function filterByVendor(
   models: PricingModel[],
-  vendor: string
+  vendors: string[]
 ): PricingModel[] {
-  if (vendor === FILTER_ALL) return models
-  return models.filter((m) => m.vendor_name === vendor)
+  if (vendors.length === 0 || vendors.includes(FILTER_ALL)) return models
+  return models.filter(
+    (m) => m.vendor_name != null && vendors.includes(m.vendor_name)
+  )
+}
+
+/**
+ * Toggle a vendor in a multi-select selection.
+ */
+export function toggleVendorSelection(
+  vendors: string[],
+  vendor: string
+): string[] {
+  if (vendor === FILTER_ALL) return []
+  return vendors.includes(vendor)
+    ? vendors.filter((item) => item !== vendor)
+    : [...vendors, vendor]
 }
 
 /**
@@ -145,7 +160,7 @@ export function filterAndSortModels(
   models: PricingModel[],
   filters: {
     search: string
-    vendor: string
+    vendor: string[]
     group: string
     quotaType: string
     endpointType: string

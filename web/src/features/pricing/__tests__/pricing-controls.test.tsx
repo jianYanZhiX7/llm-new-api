@@ -24,27 +24,42 @@ import {
   PricingToolbar,
   type PricingToolbarProps,
 } from '../components/pricing-toolbar'
+import type { PricingModel, PricingVendor } from '../types'
+
+const vendors: PricingVendor[] = [
+  { id: 1, name: 'DeepSeek' },
+  { id: 2, name: 'Moonshot' },
+  { id: 3, name: 'Unused Vendor' },
+]
+
+const vendorModels: PricingModel[] = [
+  { id: 1, model_name: 'deepseek-chat', vendor_name: 'DeepSeek' },
+  { id: 2, model_name: 'moonshot-v1', vendor_name: 'Moonshot' },
+] as PricingModel[]
 
 function toolbarProps(): PricingToolbarProps {
   return {
     filteredCount: 2,
     totalCount: 2,
+    searchInput: '',
     sortBy: 'name',
     tokenUnit: 'M',
     showRechargePrice: false,
     viewMode: 'card',
     quotaTypeFilter: 'all',
     endpointTypeFilter: 'all',
-    vendorFilter: 'all',
+    vendorFilters: [],
     groupFilter: 'all',
     tagFilter: 'all',
+    onSearchChange: vi.fn(),
+    onSearchClear: vi.fn(),
     onSortChange: vi.fn(),
     onTokenUnitChange: vi.fn(),
     onRechargePriceChange: vi.fn(),
     onViewModeChange: vi.fn(),
     onQuotaTypeChange: vi.fn(),
     onEndpointTypeChange: vi.fn(),
-    onVendorChange: vi.fn(),
+    onVendorToggle: vi.fn(),
     onGroupChange: vi.fn(),
     onTagChange: vi.fn(),
     vendors: [],
@@ -117,7 +132,7 @@ describe('pricing controls', () => {
     expect(props.onSortChange).toHaveBeenCalledWith('price-low')
   })
 
-  it('opens mobile filters from the left, selects a group, and restores focus on close', async () => {
+  it('opens the filter drawer from the left, selects a group, and restores focus on close', async () => {
     const props = toolbarProps()
     const user = userEvent.setup()
     const { rerender } = render(<PricingToolbar {...props} />)
@@ -142,5 +157,54 @@ describe('pricing controls', () => {
     expect(props.onClearFilters).toHaveBeenCalledOnce()
     await user.keyboard('{Escape}')
     expect(await screen.findByRole('button', { name: /Filter/ })).toHaveFocus()
+  })
+
+  it('keeps the search box beside the filter button and clears the query', async () => {
+    const props = toolbarProps()
+    const user = userEvent.setup()
+    render(<PricingToolbar {...props} searchInput='deepseek' />)
+    expect(screen.getByRole('textbox', { name: 'Search models' })).toHaveValue(
+      'deepseek'
+    )
+    await user.click(screen.getByRole('button', { name: 'Clear search' }))
+    expect(props.onSearchClear).toHaveBeenCalledOnce()
+  })
+
+  it('keeps several vendors selected at once and drops vendors without models', async () => {
+    const props = toolbarProps()
+    const user = userEvent.setup()
+    const { rerender } = render(
+      <PricingToolbar {...props} vendors={vendors} models={vendorModels} />
+    )
+    await user.click(screen.getByRole('button', { name: 'Filter' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Filter' })
+
+    expect(
+      within(dialog).queryByRole('button', { name: /Unused Vendor/ })
+    ).not.toBeInTheDocument()
+
+    await user.click(within(dialog).getByRole('button', { name: /DeepSeek/ }))
+    expect(props.onVendorToggle).toHaveBeenCalledWith('DeepSeek')
+
+    rerender(
+      <PricingToolbar
+        {...props}
+        vendors={vendors}
+        models={vendorModels}
+        vendorFilters={['DeepSeek', 'Moonshot']}
+        hasActiveFilters
+        activeFilterCount={1}
+      />
+    )
+    expect(
+      within(dialog).getByRole('button', { name: /DeepSeek/ })
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(dialog).getByRole('button', { name: /Moonshot/ })
+    ).toHaveAttribute('aria-pressed', 'true')
+    const allVendorChip = within(dialog)
+      .getAllByRole('button', { name: /All Vendors/ })
+      .find((button) => button.hasAttribute('aria-pressed'))
+    expect(allVendorChip).toHaveAttribute('aria-pressed', 'false')
   })
 })

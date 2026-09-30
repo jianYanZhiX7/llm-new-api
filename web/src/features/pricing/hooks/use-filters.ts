@@ -30,7 +30,11 @@ import {
   VIEW_MODES,
   type ViewMode,
 } from '../constants'
-import { filterAndSortModels, extractAllTags } from '../lib/filters'
+import {
+  filterAndSortModels,
+  extractAllTags,
+  toggleVendorSelection,
+} from '../lib/filters'
 import type { PricingModel, TokenUnit } from '../types'
 
 type FilterState = {
@@ -53,6 +57,18 @@ function normalizeViewMode(value: unknown): ViewMode {
   return VIEW_MODES.CARD
 }
 
+export function parseVendorParam(value: unknown): string[] {
+  if (typeof value !== 'string' || value.length === 0) return []
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0 && item !== FILTER_ALL)
+}
+
+export function serializeVendorParam(vendors: string[]): string | undefined {
+  return vendors.length > 0 ? vendors.join(',') : undefined
+}
+
 export function useFilters(models: PricingModel[]) {
   const search = useSearch({ from: '/pricing/' })
   const [filterState, setFilterState] = useState<FilterState>(() => ({
@@ -71,7 +87,10 @@ export function useFilters(models: PricingModel[]) {
   const searchInput = filterState.search || ''
   const debouncedSearchInput = useDebounce(searchInput, 200)
   const sortBy = filterState.sort || SORT_OPTIONS.NAME
-  const vendorFilter = filterState.vendor || FILTER_ALL
+  const vendorFilters = useMemo(
+    () => parseVendorParam(filterState.vendor),
+    [filterState.vendor]
+  )
   const groupFilter = filterState.group || FILTER_ALL
   const quotaTypeFilter = filterState.quotaType || QUOTA_TYPES.ALL
   const endpointTypeFilter = filterState.endpointType || ENDPOINT_TYPES.ALL
@@ -102,9 +121,12 @@ export function useFilters(models: PricingModel[]) {
       updateFilters({ sort: v === SORT_OPTIONS.NAME ? undefined : v }),
     [updateFilters]
   )
-  const setVendorFilter = useCallback(
-    (v: string) => updateFilters({ vendor: v === FILTER_ALL ? undefined : v }),
-    [updateFilters]
+  const toggleVendor = useCallback(
+    (v: string) =>
+      updateFilters({
+        vendor: serializeVendorParam(toggleVendorSelection(vendorFilters, v)),
+      }),
+    [updateFilters, vendorFilters]
   )
   const setGroupFilter = useCallback(
     (v: string) => updateFilters({ group: v === FILTER_ALL ? undefined : v }),
@@ -151,7 +173,7 @@ export function useFilters(models: PricingModel[]) {
 
     return filterAndSortModels(models, {
       search: debouncedSearchInput,
-      vendor: vendorFilter,
+      vendor: vendorFilters,
       group: groupFilter,
       quotaType: quotaTypeFilter,
       endpointType: endpointTypeFilter,
@@ -161,7 +183,7 @@ export function useFilters(models: PricingModel[]) {
   }, [
     models,
     debouncedSearchInput,
-    vendorFilter,
+    vendorFilters,
     groupFilter,
     quotaTypeFilter,
     endpointTypeFilter,
@@ -171,22 +193,22 @@ export function useFilters(models: PricingModel[]) {
 
   const hasActiveFilters = useMemo(
     () =>
-      vendorFilter !== FILTER_ALL ||
+      vendorFilters.length > 0 ||
       groupFilter !== FILTER_ALL ||
       quotaTypeFilter !== QUOTA_TYPES.ALL ||
       endpointTypeFilter !== ENDPOINT_TYPES.ALL ||
       tagFilter !== FILTER_ALL,
-    [vendorFilter, groupFilter, quotaTypeFilter, endpointTypeFilter, tagFilter]
+    [vendorFilters, groupFilter, quotaTypeFilter, endpointTypeFilter, tagFilter]
   )
 
   const activeFilterCount = useMemo(
     () =>
-      (vendorFilter !== FILTER_ALL ? 1 : 0) +
+      (vendorFilters.length > 0 ? 1 : 0) +
       (groupFilter !== FILTER_ALL ? 1 : 0) +
       (quotaTypeFilter !== QUOTA_TYPES.ALL ? 1 : 0) +
       (endpointTypeFilter !== ENDPOINT_TYPES.ALL ? 1 : 0) +
       (tagFilter !== FILTER_ALL ? 1 : 0),
-    [vendorFilter, groupFilter, quotaTypeFilter, endpointTypeFilter, tagFilter]
+    [vendorFilters, groupFilter, quotaTypeFilter, endpointTypeFilter, tagFilter]
   )
 
   const clearFilters = useCallback(() => {
@@ -206,7 +228,7 @@ export function useFilters(models: PricingModel[]) {
   return {
     searchInput,
     sortBy,
-    vendorFilter,
+    vendorFilters,
     groupFilter,
     quotaTypeFilter,
     endpointTypeFilter,
@@ -216,7 +238,7 @@ export function useFilters(models: PricingModel[]) {
     showRechargePrice,
     setSearchInput,
     setSortBy,
-    setVendorFilter,
+    toggleVendor,
     setGroupFilter,
     setQuotaTypeFilter,
     setEndpointTypeFilter,
