@@ -429,6 +429,7 @@
     "Allow safety_identifier passthrough": "SAFETY_IDENTIFIERパススルーを許可する",
     "Allow self-signed or hostname-mismatched SMTP certificates": "自己署名またはホスト名が一致しない SMTP 証明書を許可する",
     "Allow service_tier passthrough": "Service_tierパススルーを許可する",
+    "Allow sign in": "ログインを許可",
     "Allow speed passthrough": "speed パススルーを許可",
     "Allow updates": "更新を許可",
     "Allow upstream callbacks": "アップストリームコールバックを許可",

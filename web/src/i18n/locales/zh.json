@@ -429,6 +429,7 @@
     "Allow safety_identifier passthrough": "允许透传 safety_identifier",
     "Allow self-signed or hostname-mismatched SMTP certificates": "允许自签名或主机名不匹配的 SMTP 证书",
     "Allow service_tier passthrough": "允许透传 service_tier",
+    "Allow sign in": "允许登录",
     "Allow speed passthrough": "允许 speed 透传",
     "Allow updates": "允许更新",
     "Allow upstream callbacks": "允许上游回调",

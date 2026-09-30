@@ -1,6 +1,10 @@
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
-import { Trans, useTranslation } from 'react-i18next'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+
+import { PublicLayout } from '@/components/layout'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -45,7 +49,11 @@ function OAuthAuthorizePage() {
 
   const clientInfo = useMemo<OAuthClientInfo>(() => {
     if (clientId && oauthClients[clientId]) return oauthClients[clientId]
-    return { displayName: t('Unknown application'), tokenName: defaultTokenName, redirectUri: '' }
+    return {
+      displayName: t('Unknown application'),
+      tokenName: defaultTokenName,
+      redirectUri: '',
+    }
   }, [clientId, t])
 
   useEffect(() => {
@@ -78,96 +86,82 @@ function OAuthAuthorizePage() {
       window.location.href = `${data.redirect_uri}?code=${code}&state=${respState}`
     } catch (e: unknown) {
       setStatus('error')
-      const responseMessage = (e as { response?: { data?: { message?: string } } }).response?.data?.message
-      setError(responseMessage || (e instanceof Error ? e.message : '') || t('Authorization failed'))
+      const responseMessage = (
+        e as { response?: { data?: { message?: string } } }
+      ).response?.data?.message
+      setError(
+        responseMessage ||
+          (e instanceof Error ? e.message : '') ||
+          t('Authorization failed')
+      )
     }
-  }
-
-  const handleCancel = () => {
-    const expectedUri = oauthClients[clientId ?? '']?.redirectUri
-    if (expectedUri && redirectUri === expectedUri) {
-      const cb = new URL(expectedUri)
-      cb.searchParams.set('error', 'access_denied')
-      if (state) cb.searchParams.set('state', state)
-      window.location.href = cb.toString()
-      return
-    }
-    navigate({ to: '/' })
   }
 
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-zinc-950">
-        <p className="text-sm text-gray-500 dark:text-zinc-400">{t('Redirecting to sign in…')}</p>
-      </div>
+      <PublicLayout showMainContainer={false}>
+        <div className='flex min-h-svh items-center justify-center px-4 pt-24 pb-12'>
+          <p className='text-muted-foreground text-sm'>
+            {t('Redirecting to sign in…')}
+          </p>
+        </div>
+      </PublicLayout>
     )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-zinc-950">
-      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97757" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="2" width="20" height="8" rx="2" />
-              <rect x="2" y="14" width="20" height="8" rx="2" />
-              <circle cx="6" cy="6" r="1" fill="#D97757" />
-              <circle cx="6" cy="18" r="1" fill="#D97757" />
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">{clientInfo.displayName}</h1>
-            <p className="text-xs text-gray-500 dark:text-zinc-400">{t('Requests access to your account')}</p>
-          </div>
-        </div>
+    <PublicLayout showMainContainer={false}>
+      <div className='from-primary/10 via-background to-background flex min-h-svh flex-col bg-linear-to-b px-4 pt-24 pb-12'>
+        <div className='mx-auto flex w-full max-w-md flex-1 items-center'>
+          <Card className='ring-primary/15 shadow-primary/5 w-full gap-0 p-6 shadow-lg'>
+            <div className='flex items-center gap-3'>
+              <div className='bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl'>
+                <svg
+                  width='22'
+                  height='22'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                >
+                  <rect x='2' y='2' width='20' height='8' rx='2' />
+                  <rect x='2' y='14' width='20' height='8' rx='2' />
+                  <circle cx='6' cy='6' r='1' fill='currentColor' />
+                  <circle cx='6' cy='18' r='1' fill='currentColor' />
+                </svg>
+              </div>
+              <div className='min-w-0'>
+                <h1 className='text-foreground truncate text-lg font-semibold'>
+                  {clientInfo.displayName}
+                </h1>
+                <p className='text-muted-foreground text-xs'>
+                  {t('Requests access to your account')}
+                </p>
+              </div>
+            </div>
 
-        <div className="mb-6 space-y-2 text-sm text-gray-600 dark:text-zinc-300">
-          <p>
-            <Trans
-              i18nKey="<strong>{{user}}</strong>, {{client}} wants to create an API token named <code>{{tokenName}}</code> to access the model API."
-              components={{
-                strong: <strong className="font-medium text-gray-900 dark:text-zinc-100" />,
-                code: <code className="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-zinc-800" />,
-              }}
-              values={{
-                user: user.display_name || user.username,
-                client: clientInfo.displayName,
-                tokenName: clientInfo.tokenName,
-              }}
-            />
-          </p>
-          <ul className="list-disc space-y-1 pl-5 text-xs text-gray-500 dark:text-zinc-400">
-            <li>{t('Unlimited quota, never expires, all models')}</li>
-            <li>{t('Reuses an existing token with the same name')}</li>
-            <li>{t('Revoke anytime from the token management page')}</li>
-          </ul>
-        </div>
+            {error && (
+              <div className='bg-destructive/10 text-destructive mt-4 rounded-lg px-3 py-2 text-sm'>
+                {error}
+              </div>
+            )}
 
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-400">
-            {error}
-          </div>
-        )}
-
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={handleCancel}
-            disabled={status === 'loading'}
-            className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-          >
-            {t('Decline')}
-          </button>
-          <button
-            type="button"
-            onClick={handleApprove}
-            disabled={status === 'loading'}
-            className="flex-1 rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-orange-700 disabled:opacity-50"
-          >
-            {status === 'loading' ? t('Authorizing…') : t('Allow')}
-          </button>
+            <div className='mt-6'>
+              <Button
+                type='button'
+                size='lg'
+                className='h-11 w-full'
+                onClick={handleApprove}
+                disabled={status === 'loading'}
+              >
+                {status === 'loading' ? t('Authorizing…') : t('Allow sign in')}
+              </Button>
+            </div>
+          </Card>
         </div>
       </div>
-    </div>
+    </PublicLayout>
   )
 }

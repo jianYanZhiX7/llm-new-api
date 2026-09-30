@@ -429,6 +429,7 @@
     "Allow safety_identifier passthrough": "Autoriser la transmission de safety_identifier",
     "Allow self-signed or hostname-mismatched SMTP certificates": "Autoriser les certificats SMTP auto-signés ou dont le nom d'hôte ne correspond pas",
     "Allow service_tier passthrough": "Autoriser la transmission de service_tier",
+    "Allow sign in": "Autoriser la connexion",
     "Allow speed passthrough": "Autoriser la transmission de speed",
     "Allow updates": "Autoriser les mises à jour",
     "Allow upstream callbacks": "Autoriser les callbacks en amont",

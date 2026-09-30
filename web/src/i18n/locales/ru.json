@@ -429,6 +429,7 @@
     "Allow safety_identifier passthrough": "Разрешить сквозную передачу Safety_Identifier",
     "Allow self-signed or hostname-mismatched SMTP certificates": "Разрешить самоподписанные SMTP-сертификаты или сертификаты с несоответствующим именем узла",
     "Allow service_tier passthrough": "Разрешить сквозную передачу service_tier",
+    "Allow sign in": "Разрешить вход",
     "Allow speed passthrough": "Разрешить передачу speed",
     "Allow updates": "Разрешить обновления",
     "Allow upstream callbacks": "Разрешить обратные вызовы upstream",

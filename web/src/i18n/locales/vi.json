@@ -429,6 +429,7 @@
     "Allow safety_identifier passthrough": "Cho phép chuyển tiếp safety_identifier",
     "Allow self-signed or hostname-mismatched SMTP certificates": "Cho phép chứng chỉ SMTP tự ký hoặc không khớp tên máy chủ",
     "Allow service_tier passthrough": "Cho phép chuyển tiếp service_tier",
+    "Allow sign in": "Cho phép đăng nhập",
     "Allow speed passthrough": "Cho phép truyền speed",
     "Allow updates": "Cho phép cập nhật",
     "Allow upstream callbacks": "Cho phép callback upstream",
