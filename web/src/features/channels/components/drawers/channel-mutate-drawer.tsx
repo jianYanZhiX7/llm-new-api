@@ -2171,6 +2171,45 @@ export function ChannelMutateDrawer({
     </div>
   )
 
+  const responseModelFields = (
+    <div
+      role='group'
+      aria-label={t('Response Model Name')}
+      className={channelConfigurationBlockClassName(
+        configuration.blocks.responseModelRewrite,
+        'flex flex-col gap-4'
+      )}
+    >
+      <SubHeading
+        title={t('Response Model Name')}
+        status={configuration.blocks.responseModelRewrite}
+        icon={<ArrowRight className='h-3.5 w-3.5' />}
+        iconTone='info'
+      />
+      <FormField
+        control={form.control}
+        name='response_model_rewrite'
+        render={({ field }) => (
+          <FormItem className='flex items-center justify-between'>
+            <div className='space-y-0.5'>
+              <FormLabel>{t('Rewrite model in responses')}</FormLabel>
+              <FormDescription>
+                {t(FIELD_DESCRIPTIONS.RESPONSE_MODEL_REWRITE)}
+              </FormDescription>
+            </div>
+            <FormControl>
+              <Switch
+                disabled={sensitiveLocked}
+                checked={field.value === true}
+                onCheckedChange={(checked) => field.onChange(checked)}
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
+    </div>
+  )
+
   const basicSection = (
     <div className='scroll-mt-4'>
       <ChannelBasicSection>
@@ -4117,6 +4156,7 @@ export function ChannelMutateDrawer({
         routing={
           <>
             {modelMappingFields}
+            {responseModelFields}
             {routingFields}
           </>
         }
