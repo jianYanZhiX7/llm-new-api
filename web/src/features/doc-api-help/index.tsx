@@ -52,10 +52,6 @@ export function ApiHelpDocuments() {
           <h1 className='text-2xl font-semibold tracking-tight'>
             API 帮助文档
           </h1>
-          <p className='text-muted-foreground text-sm leading-relaxed'>
-            本站同时兼容 OpenAI 与 Anthropic 两套接口协议，替换官方 SDK 的
-            base_url 与 api_key 即可接入。
-          </p>
           <div className='flex flex-wrap items-baseline gap-2'>
             <span className='text-muted-foreground text-sm'>服务地址</span>
             <code className={INLINE_CODE_CLASS}>{baseUrl}</code>
@@ -71,7 +67,6 @@ export function ApiHelpDocuments() {
             <ProtocolCard
               id={DOC_SECTION_IDS.openai}
               title='OpenAI 兼容接口'
-              description='与 Chat Completions 接口兼容。'
               endpoint={`${baseUrl}${OPENAI_CHAT_PATH}`}
               auth={OPENAI_AUTH_HEADER}
               samples={openAiSamples}
@@ -80,7 +75,6 @@ export function ApiHelpDocuments() {
             <ProtocolCard
               id={DOC_SECTION_IDS.anthropic}
               title='Anthropic 兼容接口'
-              description='与 Messages 接口兼容。'
               endpoint={`${baseUrl}${ANTHROPIC_MESSAGES_PATH}`}
               auth={ANTHROPIC_AUTH_HEADER}
               samples={anthropicSamples}

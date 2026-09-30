@@ -17,13 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Badge } from '@/components/ui/badge'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { API_KEY_PLACEHOLDER, MODEL_PLACEHOLDER } from '../lib/samples'
 import { SCROLL_ANCHOR_CLASS } from '../lib/sections'
@@ -34,7 +28,6 @@ import { CodeSampleCard } from './code-sample-card'
 type ProtocolCardProps = {
   id: string
   title: string
-  description: string
   endpoint: string
   auth: string
   samples: CodeSamples
@@ -43,7 +36,6 @@ type ProtocolCardProps = {
 export function ProtocolCard({
   id,
   title,
-  description,
   endpoint,
   auth,
   samples,
@@ -52,7 +44,6 @@ export function ProtocolCard({
     <Card id={id} className={SCROLL_ANCHOR_CLASS}>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
       </CardHeader>
 
       <CardContent className='space-y-4'>
