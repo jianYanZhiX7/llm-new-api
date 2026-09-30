@@ -115,7 +115,8 @@ function anthropicPython(baseUrl: string): string {
     '    ],',
     ')',
     '',
-    'print(message.content[0].text)',
+    'reply = next(block for block in message.content if block.type == "text")',
+    'print(reply.text)',
   ].join('\n')
 }
 
@@ -134,7 +135,8 @@ function anthropicTypescript(baseUrl: string): string {
     `  messages: [{ role: 'user', content: '${PROMPT}' }],`,
     '})',
     '',
-    'console.log(message.content[0].text)',
+    "const reply = message.content.find((block) => block.type === 'text')",
+    'console.log(reply?.text)',
   ].join('\n')
 }
 

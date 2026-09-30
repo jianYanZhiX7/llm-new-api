@@ -80,6 +80,11 @@ describe('Anthropic compatible samples', () => {
       `-H "anthropic-version: ${ANTHROPIC_VERSION}"`
     )
   })
+
+  it('reads the text block instead of the first content block', () => {
+    expect(samples.python3).toContain('if block.type == "text"')
+    expect(samples.typescript).toContain("block.type === 'text'")
+  })
 })
 
 describe('language switching', () => {
