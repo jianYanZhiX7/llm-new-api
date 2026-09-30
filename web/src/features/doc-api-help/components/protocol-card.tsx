@@ -26,10 +26,13 @@ import {
 } from '@/components/ui/card'
 
 import { API_KEY_PLACEHOLDER, MODEL_PLACEHOLDER } from '../lib/samples'
+import { SCROLL_ANCHOR_CLASS } from '../lib/sections'
+import { INLINE_CODE_CLASS } from '../lib/styles'
 import type { CodeSamples } from '../types'
 import { CodeSampleCard } from './code-sample-card'
 
 type ProtocolCardProps = {
+  id: string
   title: string
   description: string
   endpoint: string
@@ -37,10 +40,8 @@ type ProtocolCardProps = {
   samples: CodeSamples
 }
 
-const inlineCodeClassName =
-  'bg-muted text-foreground rounded px-1 py-0.5 font-mono text-[12px] break-all'
-
 export function ProtocolCard({
+  id,
   title,
   description,
   endpoint,
@@ -48,7 +49,7 @@ export function ProtocolCard({
   samples,
 }: ProtocolCardProps) {
   return (
-    <Card>
+    <Card id={id} className={SCROLL_ANCHOR_CLASS}>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -59,22 +60,21 @@ export function ProtocolCard({
           <Badge variant='secondary' className='font-mono text-[11px]'>
             POST
           </Badge>
-          <code className={inlineCodeClassName}>{endpoint}</code>
+          <code className={INLINE_CODE_CLASS}>{endpoint}</code>
         </div>
 
         <div className='flex flex-wrap items-baseline gap-2'>
           <span className='text-muted-foreground text-sm'>鉴权请求头</span>
-          <code className={inlineCodeClassName}>{auth}</code>
+          <code className={INLINE_CODE_CLASS}>{auth}</code>
         </div>
 
         <CodeSampleCard samples={samples} />
 
         <p className='text-muted-foreground text-xs leading-relaxed'>
-          请将{' '}
-          <code className={inlineCodeClassName}>{API_KEY_PLACEHOLDER}</code>{' '}
-          替换为你的 API Key，将{' '}
-          <code className={inlineCodeClassName}>{MODEL_PLACEHOLDER}</code>{' '}
-          替换为你要调用的模型名称。
+          将 <code className={INLINE_CODE_CLASS}>{API_KEY_PLACEHOLDER}</code>{' '}
+          换成你的 API Key，将{' '}
+          <code className={INLINE_CODE_CLASS}>{MODEL_PLACEHOLDER}</code>{' '}
+          换成模型名称。
         </p>
       </CardContent>
     </Card>

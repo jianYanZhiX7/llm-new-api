@@ -16,33 +16,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Link } from '@tanstack/react-router'
 import { useMemo } from 'react'
 
 import { PublicLayout } from '@/components/layout'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 
+import { DocToc } from './components/doc-toc'
 import { ProtocolCard } from './components/protocol-card'
+import { QuickStartSteps } from './components/quick-start-steps'
 import {
   ANTHROPIC_MESSAGES_PATH,
   buildAnthropicSamples,
   buildOpenAiSamples,
   OPENAI_CHAT_PATH,
 } from './lib/samples'
+import { DOC_SECTION_IDS, SCROLL_ANCHOR_CLASS } from './lib/sections'
+import { INLINE_CODE_CLASS } from './lib/styles'
 import { useApiBaseUrl } from './lib/use-api-base-url'
 
 const OPENAI_AUTH_HEADER = 'Authorization: Bearer <YOUR_API_KEY>'
 const ANTHROPIC_AUTH_HEADER = 'x-api-key: <YOUR_API_KEY>'
-
-const inlineCodeClassName =
-  'bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-[12px] break-all'
 
 export function ApiHelpDocuments() {
   const baseUrl = useApiBaseUrl()
@@ -55,76 +47,52 @@ export function ApiHelpDocuments() {
 
   return (
     <PublicLayout>
-      <div className='mx-auto max-w-4xl space-y-8'>
-        <header className='space-y-3'>
-          <h1 className='text-3xl font-semibold tracking-tight'>
-            API 帮助文档
-          </h1>
-          <p className='text-muted-foreground leading-relaxed'>
-            本站同时兼容 OpenAI 与 Anthropic 两套接口协议。获取 API Key
-            并挑选模型后，你可以直接使用官方 SDK 或任意 HTTP
-            客户端发起请求，无需改动已有代码。
-          </p>
-        </header>
-
-        <div className='flex flex-wrap items-baseline gap-2'>
-          <span className='text-muted-foreground text-sm'>服务地址</span>
-          <code className={inlineCodeClassName}>{baseUrl}</code>
+      <div className='mx-auto grid max-w-5xl gap-8 xl:grid-cols-[176px_minmax(0,1fr)]'>
+        <div className='sticky top-20 hidden self-start xl:block'>
+          <DocToc />
         </div>
 
-        <section className='grid gap-4 sm:grid-cols-2'>
-          <Card>
-            <CardHeader>
-              <CardTitle>第一步：获取 API Key</CardTitle>
-              <CardDescription>
-                在密钥管理页面创建令牌，它是一切请求的身份凭证，请妥善保管。
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button size='sm' render={<Link to='/keys' />}>
-                前往密钥管理
-              </Button>
-            </CardContent>
-          </Card>
+        <div className='min-w-0 space-y-10'>
+          <header className='space-y-3'>
+            <h1 className='text-2xl font-semibold tracking-tight'>
+              API 帮助文档
+            </h1>
+            <p className='text-muted-foreground text-sm leading-relaxed'>
+              本站同时兼容 OpenAI 与 Anthropic 两套接口协议，替换官方 SDK 的
+              base_url 与 api_key 即可接入。
+            </p>
+            <div className='flex flex-wrap items-baseline gap-2'>
+              <span className='text-muted-foreground text-sm'>服务地址</span>
+              <code className={INLINE_CODE_CLASS}>{baseUrl}</code>
+            </div>
+          </header>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>第二步：挑选模型</CardTitle>
-              <CardDescription>
-                在模型广场查看可用模型、计费方式与支持的接口类型。
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                size='sm'
-                variant='outline'
-                render={<Link to='/pricing' />}
-              >
-                前往模型广场
-              </Button>
-            </CardContent>
-          </Card>
-        </section>
+          <section
+            id={DOC_SECTION_IDS.quickStart}
+            className={SCROLL_ANCHOR_CLASS}
+          >
+            <h2 className='mb-4 text-lg font-medium'>快速开始</h2>
+            <QuickStartSteps />
+          </section>
 
-        <p className='text-muted-foreground text-sm leading-relaxed'>
-          以下示例均为非流式调用，如何选择模型请参考上方的模型广场。
-        </p>
+          <ProtocolCard
+            id={DOC_SECTION_IDS.openai}
+            title='OpenAI 兼容接口'
+            description='与 Chat Completions 接口兼容，示例均为非流式调用。'
+            endpoint={`${baseUrl}${OPENAI_CHAT_PATH}`}
+            auth={OPENAI_AUTH_HEADER}
+            samples={openAiSamples}
+          />
 
-        <ProtocolCard
-          title='OpenAI 兼容接口'
-          description='与 OpenAI Chat Completions 接口完全兼容。使用 openai 官方 SDK 时，只需替换 base_url 与 api_key 两项配置。'
-          endpoint={`${baseUrl}${OPENAI_CHAT_PATH}`}
-          auth={OPENAI_AUTH_HEADER}
-          samples={openAiSamples}
-        />
-
-        <ProtocolCard
-          title='Anthropic 兼容接口'
-          description='与 Anthropic Messages 接口完全兼容。使用 anthropic 官方 SDK 时，只需替换 base_url 与 api_key 两项配置。'
-          endpoint={`${baseUrl}${ANTHROPIC_MESSAGES_PATH}`}
-          auth={ANTHROPIC_AUTH_HEADER}
-          samples={anthropicSamples}
-        />
+          <ProtocolCard
+            id={DOC_SECTION_IDS.anthropic}
+            title='Anthropic 兼容接口'
+            description='与 Messages 接口兼容，示例均为非流式调用。'
+            endpoint={`${baseUrl}${ANTHROPIC_MESSAGES_PATH}`}
+            auth={ANTHROPIC_AUTH_HEADER}
+            samples={anthropicSamples}
+          />
+        </div>
       </div>
     </PublicLayout>
   )

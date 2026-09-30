@@ -21,6 +21,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { CodeSampleCard } from '../components/code-sample-card'
+import { DocToc } from '../components/doc-toc'
 import {
   ANTHROPIC_VERSION,
   API_KEY_PLACEHOLDER,
@@ -28,6 +29,7 @@ import {
   buildOpenAiSamples,
   MODEL_PLACEHOLDER,
 } from '../lib/samples'
+import { DOC_SECTIONS } from '../lib/sections'
 
 const BASE_URL = 'https://example.com'
 
@@ -85,5 +87,17 @@ describe('language switching', () => {
       `curl ${BASE_URL}/v1/chat/completions`
     )
     expect(container.textContent).not.toContain('from openai import OpenAI')
+  })
+})
+
+describe('doc table of contents', () => {
+  it('anchors every documented section in order', () => {
+    render(<DocToc />)
+
+    const hrefs = screen
+      .getAllByRole('link')
+      .map((link) => link.getAttribute('href'))
+
+    expect(hrefs).toEqual(DOC_SECTIONS.map((section) => `#${section.id}`))
   })
 })
