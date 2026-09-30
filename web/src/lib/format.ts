@@ -23,6 +23,7 @@ import {
   formatQuotaWithCurrency,
   getCurrencyDisplay,
   getCurrencyFractionDigits,
+  type CurrencyFormatOptions,
 } from './currency'
 
 // ============================================================================
@@ -31,12 +32,14 @@ import {
 
 export function formatNumber(
   value: number | null | undefined,
-  locales?: Intl.LocalesArgument
+  locales?: Intl.LocalesArgument,
+  useGrouping = true
 ): string {
   if (value == null || Number.isNaN(value as number)) return '-'
-  return Intl.NumberFormat(locales, { maximumFractionDigits: 2 }).format(
-    value as number
-  )
+  return Intl.NumberFormat(locales, {
+    maximumFractionDigits: 2,
+    useGrouping,
+  }).format(value as number)
 }
 
 export function formatCompactNumber(
@@ -70,11 +73,15 @@ export function formatCurrencyUSD(value: number | null | undefined): string {
  * Format quota into the configured display amount.
  * Quota is stored in units where `quotaPerUnit` equals 1 USD.
  */
-export function formatQuota(quota: number): string {
+export function formatQuota(
+  quota: number,
+  options?: CurrencyFormatOptions
+): string {
   return formatQuotaWithCurrency(quota, {
     digitsLarge: 2,
     digitsSmall: 4,
     abbreviate: true,
+    ...options,
   })
 }
 

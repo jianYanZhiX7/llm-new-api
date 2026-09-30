@@ -101,6 +101,8 @@ export interface CurrencyFormatOptions {
   compact?: boolean
   /** Whether to include the currency/custom symbol. Token displays are unchanged. */
   showSymbol?: boolean
+  /** Whether to insert locale grouping separators (thousands commas) */
+  useGrouping?: boolean
   /** Locale used for number formatting (defaults to the runtime locale) */
   locale?: Intl.LocalesArgument | undefined
 }
@@ -137,6 +139,7 @@ const DEFAULT_FORMAT_OPTIONS: ResolvedCurrencyFormatOptions = {
   minimumNonZero: 0,
   compact: false,
   showSymbol: true,
+  useGrouping: true,
   locale: undefined,
 }
 
@@ -240,6 +243,7 @@ function mergeOptions(
       options.minimumNonZero ?? DEFAULT_FORMAT_OPTIONS.minimumNonZero,
     compact: options.compact ?? DEFAULT_FORMAT_OPTIONS.compact,
     showSymbol: options.showSymbol ?? DEFAULT_FORMAT_OPTIONS.showSymbol,
+    useGrouping: options.useGrouping ?? DEFAULT_FORMAT_OPTIONS.useGrouping,
     locale: options.locale ?? DEFAULT_FORMAT_OPTIONS.locale,
   }
 }
@@ -307,6 +311,7 @@ function formatCurrencyValue(
       return new Intl.NumberFormat(options.locale, {
         notation: 'compact',
         maximumFractionDigits: 1,
+        useGrouping: options.useGrouping,
       }).format(value)
     }
     return formatNumberWithSuffix(
@@ -330,6 +335,7 @@ function formatCurrencyValue(
         notation: options.compact ? 'compact' : 'standard',
         minimumFractionDigits: 0,
         maximumFractionDigits: options.compact ? 1 : digits,
+        useGrouping: options.useGrouping,
       }).format(adjustedValue)
     }
 
@@ -340,6 +346,7 @@ function formatCurrencyValue(
       notation: options.compact ? 'compact' : 'standard',
       minimumFractionDigits: 0,
       maximumFractionDigits: options.compact ? 1 : digits,
+      useGrouping: options.useGrouping,
     }).format(adjustedValue)
     return formatted
   }
@@ -348,6 +355,7 @@ function formatCurrencyValue(
     notation: options.compact ? 'compact' : 'standard',
     minimumFractionDigits: 0,
     maximumFractionDigits: options.compact ? 1 : digits,
+    useGrouping: options.useGrouping,
   }).format(adjustedValue)
 
   return options.showSymbol ? `${meta.symbol} ${decimal}` : decimal
@@ -420,6 +428,7 @@ export function formatCurrencyFromUSD(
       return new Intl.NumberFormat(merged.locale, {
         notation: 'compact',
         maximumFractionDigits: 1,
+        useGrouping: merged.useGrouping,
       }).format(tokens)
     }
     return formatNumberWithSuffix(
