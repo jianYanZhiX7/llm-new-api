@@ -58,6 +58,7 @@ export function formatCurrency(amount: number | string): string {
   return new Intl.NumberFormat(undefined, {
     minimumFractionDigits: 0,
     maximumFractionDigits: Math.abs(numeric) >= 1 ? 2 : 4,
+    useGrouping: false,
   }).format(numeric)
 }
 

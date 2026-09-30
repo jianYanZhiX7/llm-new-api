@@ -84,7 +84,9 @@ export function CreemConfirmDialog({
         </div>
         <div className='flex items-center justify-between'>
           <span className='text-muted-foreground'>{t('Quota')}</span>
-          <span className='font-medium'>{formatNumber(product.quota)}</span>
+          <span className='font-medium'>
+            {formatNumber(product.quota, undefined, false)}
+          </span>
         </div>
       </div>
     </Dialog>

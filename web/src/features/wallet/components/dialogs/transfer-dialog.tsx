@@ -117,7 +117,7 @@ export function TransferDialog({
             {t('Available Rewards')}
           </Label>
           <div className='text-2xl font-semibold'>
-            {formatQuota(availableQuota)}
+            {formatQuota(availableQuota, { useGrouping: false })}
           </div>
         </div>
 
@@ -136,10 +136,10 @@ export function TransferDialog({
             min={minimumAmount}
             max={maximumAmount}
             step={minimumAmount}
-            className='font-mono text-lg'
+            className='text-lg'
           />
           <p className='text-muted-foreground text-xs'>
-            {t('Minimum:')} {formatQuota(minimumQuota)}
+            {t('Minimum:')} {formatQuota(minimumQuota, { useGrouping: false })}
           </p>
         </div>
       </div>

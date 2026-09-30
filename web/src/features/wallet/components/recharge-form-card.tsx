@@ -149,7 +149,6 @@ export function RechargeFormCard({
       <Card data-card-hover='false' className='gap-0 overflow-hidden py-0'>
         <CardHeader className='border-b p-3 !pb-3 sm:p-5 sm:!pb-5'>
           <Skeleton className='h-6 w-32' />
-          <Skeleton className='mt-2 h-4 w-48' />
         </CardHeader>
         <CardContent className='space-y-4 p-3 sm:space-y-6 sm:p-5'>
           <div className='space-y-4 sm:space-y-6'>
@@ -197,8 +196,7 @@ export function RechargeFormCard({
 
   return (
     <TitledCard
-      title={t('Add Funds')}
-      description={t('Choose an amount and payment method')}
+      title={t('Recharge')}
       icon={<WalletCards className='h-4 w-4' />}
       iconTone='success'
       disableHoverEffect
@@ -258,7 +256,7 @@ export function RechargeFormCard({
                         >
                           <div className='flex w-full items-center justify-between'>
                             <div className='text-base font-semibold sm:text-lg'>
-                              {formatNumber(displayValue)}
+                              {formatNumber(displayValue, undefined, false)}
                             </div>
                             {hasDiscount && (
                               <div className='text-xs font-medium text-green-600'>

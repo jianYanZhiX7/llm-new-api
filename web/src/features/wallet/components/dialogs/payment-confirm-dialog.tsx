@@ -88,6 +88,7 @@ export function PaymentConfirmDialog({
                 digitsLarge: 2,
                 digitsSmall: 2,
                 abbreviate: false,
+                useGrouping: false,
               })}
             </span>
           </div>

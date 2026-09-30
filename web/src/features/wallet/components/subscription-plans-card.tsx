@@ -404,6 +404,15 @@ export function SubscriptionPlansCard({
                   const usedAmount = Number(subscription?.amount_used || 0)
                   const remainAmount =
                     totalAmount > 0 ? Math.max(0, totalAmount - usedAmount) : 0
+                  const usedDisplay = formatQuota(usedAmount, {
+                    useGrouping: false,
+                  })
+                  const totalDisplay = formatQuota(totalAmount, {
+                    useGrouping: false,
+                  })
+                  const remainDisplay = formatQuota(remainAmount, {
+                    useGrouping: false,
+                  })
                   const planTitle =
                     planTitleMap.get(subscription?.plan_id) || ''
                   const remainDays = getRemainingDays(sub)
@@ -487,9 +496,8 @@ export function SubscriptionPlansCard({
                             <TooltipTrigger
                               render={<span className='cursor-help' />}
                             >
-                              {formatQuota(usedAmount)}/
-                              {formatQuota(totalAmount)} · {t('Remaining')}{' '}
-                              {formatQuota(remainAmount)}
+                              {usedDisplay}/{totalDisplay} · {t('Remaining')}{' '}
+                              {remainDisplay}
                             </TooltipTrigger>
                             <TooltipContent>
                               {t('Raw Quota')}: {usedAmount}/{totalAmount} ·{' '}
@@ -541,7 +549,7 @@ export function SubscriptionPlansCard({
                   ? `${t('Quota Reset')}: ${formatResetPeriod(plan, t)}`
                   : null,
                 totalAmount > 0
-                  ? `${t('Total Quota')}: ${formatQuota(totalAmount)}`
+                  ? `${t('Total Quota')}: ${formatQuota(totalAmount, { useGrouping: false })}`
                   : `${t('Total Quota')}: ${t('Unlimited')}`,
                 limit > 0 ? `${t('Purchase Limit')}: ${limit}` : null,
                 plan.upgrade_group

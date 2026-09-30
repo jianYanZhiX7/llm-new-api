@@ -47,7 +47,7 @@ export function useRedemption() {
         const quotaAdded = response.data
         toast.success(
           i18next.t('Redemption successful! Added: {{quota}}', {
-            quota: formatQuota(quotaAdded),
+            quota: formatQuota(quotaAdded, { useGrouping: false }),
           })
         )
         await getSelf()
