@@ -44,7 +44,7 @@ export function ApiEndpointsHint({ className }: ApiEndpointsHintProps) {
         className
       )}
     >
-      <div className='flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-6'>
+      <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         {ENDPOINTS.map((endpoint) => {
           const copied = copiedText === endpoint.url
           return (
@@ -73,15 +73,25 @@ export function ApiEndpointsHint({ className }: ApiEndpointsHintProps) {
         })}
       </div>
 
-      <Button
-        variant='default'
-        size='sm'
-        className='min-w-32 shrink-0 self-start px-6 sm:self-auto'
-        render={<Link to='/pricing' />}
-      >
-        {t('Model Square')}
-        <ArrowRight className='size-3.5' data-icon='inline-end' />
-      </Button>
+      <div className='flex shrink-0 items-center gap-2 self-start sm:self-auto'>
+        <Button
+          variant='default'
+          size='sm'
+          className='min-w-32 bg-white! px-6 text-blue-600! [a]:hover:bg-blue-50!'
+          render={<Link to='/pricing' />}
+        >
+          {t('Model Square')}
+          <ArrowRight className='size-3.5' data-icon='inline-end' />
+        </Button>
+        <Button
+          variant='outline'
+          size='sm'
+          className='min-w-32 px-6'
+          render={<Link to='/my-help/doc-api-help' />}
+        >
+          帮助文档
+        </Button>
+      </div>
     </div>
   )
 }

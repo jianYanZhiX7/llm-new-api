@@ -349,40 +349,42 @@ async function renderKeysPage(status = 1, overrides: Partial<ApiKey> = {}) {
   return { post, put }
 }
 
-it('combines creation and last use while keeping expiry, models and IP restrictions separate', async () => {
+it('shows only name, status, API key and time by default', async () => {
   await renderKeysPage()
-  for (const name of ['Name', 'API Key', 'Group', 'Models', 'IP Restriction']) {
+  for (const name of ['Name', 'Status', 'API Key', 'Time']) {
     expect(screen.getByRole('columnheader', { name })).toBeInTheDocument()
   }
-  expect(screen.getByRole('columnheader', { name: 'Time' })).toBeInTheDocument()
-  expect(
-    screen.getByRole('columnheader', { name: 'Expires' })
-  ).toBeInTheDocument()
+  for (const name of [
+    'Quota ($)',
+    'Group',
+    'Models',
+    'IP Restriction',
+    'Expires',
+  ]) {
+    expect(screen.queryByRole('columnheader', { name })).not.toBeInTheDocument()
+  }
   const timeCell = screen.getByRole('cell', { name: /Created.*Last Used/ })
   expect(within(timeCell).getByText('Last Used')).toBeInTheDocument()
+})
+
+it('lets stored column preferences override the default visibility', async () => {
+  localStorage.setItem(
+    'api-keys:column-visibility:v2',
+    JSON.stringify({ quota: true, expired_time: true, group: false })
+  )
+  await renderKeysPage()
   const quotaHeader = screen.getByRole('columnheader', { name: 'Quota ($)' })
   const quotaTrigger = screen.getByRole('button', {
     name: /Remaining 80; Remaining percentage 40%; Used amount 120/,
   })
   expect(quotaHeader).not.toHaveClass('pr-8')
   expect(quotaTrigger.closest('td')).not.toHaveClass('pr-8')
-})
-
-it('restores dates hidden by the old default and preserves unrelated column preferences', async () => {
-  localStorage.setItem(
-    'api-keys:column-visibility',
-    JSON.stringify({
-      created_time: false,
-      accessed_time: false,
-      expired_time: false,
-      model_limits: false,
-    })
-  )
-  await renderKeysPage()
-  expect(screen.getByRole('columnheader', { name: 'Time' })).toBeInTheDocument()
   expect(
     screen.getByRole('columnheader', { name: 'Expires' })
   ).toBeInTheDocument()
+  expect(
+    screen.queryByRole('columnheader', { name: 'Group' })
+  ).not.toBeInTheDocument()
   expect(
     screen.queryByRole('columnheader', { name: 'Models' })
   ).not.toBeInTheDocument()
