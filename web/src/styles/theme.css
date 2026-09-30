@@ -19,17 +19,16 @@ For commercial licensing, please contact support@quantumnous.com
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Latin comes from the bundled Public Sans; every CJK glyph falls through to
-   * the bundled Noto Sans SC, which precedes the platform CJK fonts on purpose.
-   * Putting the webfont first is what makes Chinese text identical on Windows,
-   * macOS and Linux instead of switching between YaHei / PingFang / WenQuanYi.
-   * The platform fonts stay listed so text still renders if the webfonts fail
-   * to load. */
+  /* Microsoft YaHei is the product body face. The self-hosted webfont sits
+   * first so Latin and CJK render identically on Windows, macOS and Linux,
+   * with the platform YaHei behind it for builds that already have it
+   * installed. The bundled Public Sans / Noto Sans SC stay listed as offline
+   * fallbacks and are only downloaded if the YaHei webfont fails to load. */
   --font-sans:
-    'Public Sans Variable', 'Noto Sans SC Variable', 'Microsoft YaHei',
-    '微软雅黑', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC',
-    'Source Han Sans SC', 'WenQuanYi Micro Hei', 'Segoe UI', Roboto, Helvetica,
-    Arial, sans-serif;
+    'Microsoft YaHei Webfont', 'Microsoft YaHei', '微软雅黑',
+    'Public Sans Variable', 'Noto Sans SC Variable', 'PingFang SC',
+    'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC',
+    'WenQuanYi Micro Hei', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   /* Editorial serif token — the body face used by the `serif` font axis
    * and by presets that opt in (currently Anthropic). Lora carries only
    * Latin glyphs, so the stack walks through CJK serifs (Noto / Source Han

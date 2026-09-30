@@ -1,0 +1,21 @@
+@font-face {
+  font-family: 'Microsoft YaHei Webfont';
+  src: url('./msyh-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-00FF, U+2000-2BFF, U+3000-33FF, U+4E00-9FFF, U+FE30-FE4F,
+    U+FF00-FFEF;
+}
+
+@font-face {
+  font-family: 'Microsoft YaHei Webfont';
+  src: url('./msyh-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-00FF, U+2000-2BFF, U+3000-33FF, U+4E00-9FFF, U+FE30-FE4F,
+    U+FF00-FFEF;
+}
