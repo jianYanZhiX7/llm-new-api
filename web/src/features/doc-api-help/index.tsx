@@ -32,17 +32,26 @@ import {
 import { DOC_SECTION_IDS } from './lib/sections'
 import { INLINE_CODE_CLASS } from './lib/styles'
 import { useApiBaseUrl } from './lib/use-api-base-url'
-
-const OPENAI_AUTH_HEADER = 'Authorization: Bearer <YOUR_API_KEY>'
-const ANTHROPIC_AUTH_HEADER = 'x-api-key: <YOUR_API_KEY>'
+import { useApiKeySelection } from './lib/use-api-key-options'
+import { useModelSelection } from './lib/use-model-options'
 
 export function ApiHelpDocuments() {
   const baseUrl = useApiBaseUrl()
+  const apiKeySelection = useApiKeySelection()
+  const modelSelection = useModelSelection()
 
-  const openAiSamples = useMemo(() => buildOpenAiSamples(baseUrl), [baseUrl])
+  const credentials = useMemo(
+    () => ({ apiKey: apiKeySelection.apiKey, model: modelSelection.model }),
+    [apiKeySelection.apiKey, modelSelection.model]
+  )
+
+  const openAiSamples = useMemo(
+    () => buildOpenAiSamples(baseUrl, credentials),
+    [baseUrl, credentials]
+  )
   const anthropicSamples = useMemo(
-    () => buildAnthropicSamples(baseUrl),
-    [baseUrl]
+    () => buildAnthropicSamples(baseUrl, credentials),
+    [baseUrl, credentials]
   )
 
   return (
@@ -58,9 +67,13 @@ export function ApiHelpDocuments() {
           </div>
         </header>
 
-        <div className='mt-8 grid gap-8 xl:grid-cols-[160px_minmax(0,1fr)_260px]'>
-          <div className='order-2 hidden self-start xl:sticky xl:top-20 xl:order-1 xl:block'>
-            <DocToc />
+        <div className='mt-8 grid gap-8 xl:grid-cols-[280px_minmax(0,1fr)_160px]'>
+          <div className='order-1 min-w-0 self-start xl:sticky xl:top-20'>
+            <QuickStartCard
+              baseUrl={baseUrl}
+              apiKeySelection={apiKeySelection}
+              modelSelection={modelSelection}
+            />
           </div>
 
           <div className='order-3 min-w-0 space-y-8 xl:order-2'>
@@ -68,21 +81,23 @@ export function ApiHelpDocuments() {
               id={DOC_SECTION_IDS.openai}
               title='OpenAI 兼容接口'
               endpoint={`${baseUrl}${OPENAI_CHAT_PATH}`}
-              auth={OPENAI_AUTH_HEADER}
+              auth='bearer'
               samples={openAiSamples}
+              credentials={credentials}
             />
 
             <ProtocolCard
               id={DOC_SECTION_IDS.anthropic}
               title='Anthropic 兼容接口'
               endpoint={`${baseUrl}${ANTHROPIC_MESSAGES_PATH}`}
-              auth={ANTHROPIC_AUTH_HEADER}
+              auth='apiKey'
               samples={anthropicSamples}
+              credentials={credentials}
             />
           </div>
 
-          <div className='order-1 self-start xl:sticky xl:top-20 xl:order-3'>
-            <QuickStartCard baseUrl={baseUrl} />
+          <div className='order-2 hidden self-start xl:sticky xl:top-20 xl:order-3 xl:block'>
+            <DocToc />
           </div>
         </div>
       </div>

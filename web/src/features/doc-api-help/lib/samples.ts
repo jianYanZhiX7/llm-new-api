@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import type { CodeSamples } from '../types'
+import type { CodeSamples, SampleCredentials } from '../types'
 
 export const API_KEY_PLACEHOLDER = '<YOUR_API_KEY>'
 export const MODEL_PLACEHOLDER = '<YOUR_MODEL>'
@@ -26,22 +26,29 @@ export const ANTHROPIC_MESSAGES_PATH = '/v1/messages'
 export const ANTHROPIC_VERSION = '2023-06-01'
 export const MAX_TOKENS = 1024
 
+export const DEFAULT_CREDENTIALS: SampleCredentials = {
+  apiKey: API_KEY_PLACEHOLDER,
+  model: MODEL_PLACEHOLDER,
+}
+
 const PROMPT = '你好，请用一句话介绍你自己。'
 
-const openAiBody = (): string =>
+const curlIndent = '\n      '
+
+const openAiBody = (model: string): string =>
   [
     '{',
-    `  "model": "${MODEL_PLACEHOLDER}",`,
+    `  "model": "${model}",`,
     '  "messages": [',
     `    { "role": "user", "content": "${PROMPT}" }`,
     '  ]',
     '}',
   ].join('\n')
 
-const anthropicBody = (): string =>
+const anthropicBody = (model: string): string =>
   [
     '{',
-    `  "model": "${MODEL_PLACEHOLDER}",`,
+    `  "model": "${model}",`,
     `  "max_tokens": ${MAX_TOKENS},`,
     '  "messages": [',
     `    { "role": "user", "content": "${PROMPT}" }`,
@@ -49,19 +56,20 @@ const anthropicBody = (): string =>
     '}',
   ].join('\n')
 
-const curlIndent = '\n      '
-
-function openAiPython(baseUrl: string): string {
+function openAiPython(
+  baseUrl: string,
+  { apiKey, model }: SampleCredentials
+): string {
   return [
     'from openai import OpenAI',
     '',
     'client = OpenAI(',
     `    base_url="${baseUrl}${OPENAI_BASE_PATH}",`,
-    `    api_key="${API_KEY_PLACEHOLDER}",`,
+    `    api_key="${apiKey}",`,
     ')',
     '',
     'completion = client.chat.completions.create(',
-    `    model="${MODEL_PLACEHOLDER}",`,
+    `    model="${model}",`,
     '    messages=[',
     `        {"role": "user", "content": "${PROMPT}"}`,
     '    ],',
@@ -71,17 +79,20 @@ function openAiPython(baseUrl: string): string {
   ].join('\n')
 }
 
-function openAiTypescript(baseUrl: string): string {
+function openAiTypescript(
+  baseUrl: string,
+  { apiKey, model }: SampleCredentials
+): string {
   return [
     "import OpenAI from 'openai'",
     '',
     'const client = new OpenAI({',
     `  baseURL: '${baseUrl}${OPENAI_BASE_PATH}',`,
-    `  apiKey: '${API_KEY_PLACEHOLDER}',`,
+    `  apiKey: '${apiKey}',`,
     '})',
     '',
     'const completion = await client.chat.completions.create({',
-    `  model: '${MODEL_PLACEHOLDER}',`,
+    `  model: '${model}',`,
     `  messages: [{ role: 'user', content: '${PROMPT}' }],`,
     '})',
     '',
@@ -89,26 +100,29 @@ function openAiTypescript(baseUrl: string): string {
   ].join('\n')
 }
 
-function openAiCurl(baseUrl: string): string {
+function openAiCurl(baseUrl: string, { apiKey, model }: SampleCredentials) {
   return [
     `curl ${baseUrl}${OPENAI_CHAT_PATH} \\`,
-    `  -H "Authorization: Bearer ${API_KEY_PLACEHOLDER}" \\`,
+    `  -H "Authorization: Bearer ${apiKey}" \\`,
     '  -H "Content-Type: application/json" \\',
-    `  -d '${openAiBody().replaceAll('\n', curlIndent)}'`,
+    `  -d '${openAiBody(model).replaceAll('\n', curlIndent)}'`,
   ].join('\n')
 }
 
-function anthropicPython(baseUrl: string): string {
+function anthropicPython(
+  baseUrl: string,
+  { apiKey, model }: SampleCredentials
+): string {
   return [
     'import anthropic',
     '',
     'client = anthropic.Anthropic(',
     `    base_url="${baseUrl}",`,
-    `    api_key="${API_KEY_PLACEHOLDER}",`,
+    `    api_key="${apiKey}",`,
     ')',
     '',
     'message = client.messages.create(',
-    `    model="${MODEL_PLACEHOLDER}",`,
+    `    model="${model}",`,
     `    max_tokens=${MAX_TOKENS},`,
     '    messages=[',
     `        {"role": "user", "content": "${PROMPT}"}`,
@@ -120,17 +134,20 @@ function anthropicPython(baseUrl: string): string {
   ].join('\n')
 }
 
-function anthropicTypescript(baseUrl: string): string {
+function anthropicTypescript(
+  baseUrl: string,
+  { apiKey, model }: SampleCredentials
+): string {
   return [
     "import Anthropic from '@anthropic-ai/sdk'",
     '',
     'const client = new Anthropic({',
     `  baseURL: '${baseUrl}',`,
-    `  apiKey: '${API_KEY_PLACEHOLDER}',`,
+    `  apiKey: '${apiKey}',`,
     '})',
     '',
     'const message = await client.messages.create({',
-    `  model: '${MODEL_PLACEHOLDER}',`,
+    `  model: '${model}',`,
     `  max_tokens: ${MAX_TOKENS},`,
     `  messages: [{ role: 'user', content: '${PROMPT}' }],`,
     '})',
@@ -140,28 +157,34 @@ function anthropicTypescript(baseUrl: string): string {
   ].join('\n')
 }
 
-function anthropicCurl(baseUrl: string): string {
+function anthropicCurl(baseUrl: string, { apiKey, model }: SampleCredentials) {
   return [
     `curl ${baseUrl}${ANTHROPIC_MESSAGES_PATH} \\`,
-    `  -H "x-api-key: ${API_KEY_PLACEHOLDER}" \\`,
+    `  -H "x-api-key: ${apiKey}" \\`,
     `  -H "anthropic-version: ${ANTHROPIC_VERSION}" \\`,
     '  -H "Content-Type: application/json" \\',
-    `  -d '${anthropicBody().replaceAll('\n', curlIndent)}'`,
+    `  -d '${anthropicBody(model).replaceAll('\n', curlIndent)}'`,
   ].join('\n')
 }
 
-export function buildOpenAiSamples(baseUrl: string): CodeSamples {
+export function buildOpenAiSamples(
+  baseUrl: string,
+  credentials: SampleCredentials = DEFAULT_CREDENTIALS
+): CodeSamples {
   return {
-    python3: openAiPython(baseUrl),
-    typescript: openAiTypescript(baseUrl),
-    curl: openAiCurl(baseUrl),
+    python3: openAiPython(baseUrl, credentials),
+    typescript: openAiTypescript(baseUrl, credentials),
+    curl: openAiCurl(baseUrl, credentials),
   }
 }
 
-export function buildAnthropicSamples(baseUrl: string): CodeSamples {
+export function buildAnthropicSamples(
+  baseUrl: string,
+  credentials: SampleCredentials = DEFAULT_CREDENTIALS
+): CodeSamples {
   return {
-    python3: anthropicPython(baseUrl),
-    typescript: anthropicTypescript(baseUrl),
-    curl: anthropicCurl(baseUrl),
+    python3: anthropicPython(baseUrl, credentials),
+    typescript: anthropicTypescript(baseUrl, credentials),
+    curl: anthropicCurl(baseUrl, credentials),
   }
 }

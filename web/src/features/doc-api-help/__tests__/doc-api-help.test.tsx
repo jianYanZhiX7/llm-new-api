@@ -16,19 +16,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   createMemoryHistory,
   createRootRoute,
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
-import { render, screen } from '@testing-library/react'
+import { act, render, renderHook, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { fetchTokenKey, getApiKeys } from '@/features/keys/api'
+import { API_KEY_STATUS } from '@/features/keys/constants'
+import { useAuthStore } from '@/stores/auth-store'
 
 import { CodeSampleCard } from '../components/code-sample-card'
 import { DocToc } from '../components/doc-toc'
+import { ProtocolCard } from '../components/protocol-card'
 import { QuickStartCard } from '../components/quick-start-card'
 import {
   ANTHROPIC_VERSION,
@@ -39,8 +45,26 @@ import {
   OPENAI_BASE_PATH,
 } from '../lib/samples'
 import { DOC_SECTIONS } from '../lib/sections'
+import { useApiKeySelection } from '../lib/use-api-key-options'
+import type {
+  ApiKeySelection,
+  ModelSelection,
+  Selection,
+  SelectionStatus,
+} from '../types'
+
+vi.mock('@/features/keys/api', () => ({
+  getApiKeys: vi.fn(),
+  fetchTokenKey: vi.fn(),
+}))
 
 const BASE_URL = 'https://example.com'
+const KEY_ID = '7'
+
+afterEach(() => {
+  useAuthStore.getState().auth.reset()
+  vi.clearAllMocks()
+})
 
 async function renderInRouter(ui: ReactNode) {
   const router = createRouter({
@@ -49,6 +73,50 @@ async function renderInRouter(ui: ReactNode) {
   })
   await router.load()
   return render(<RouterProvider router={router} />)
+}
+
+function selection(
+  status: SelectionStatus = 'ready',
+  select = vi.fn()
+): Selection {
+  return {
+    options: [
+      { value: KEY_ID, label: '默认密钥', description: 'sk-ABCD********1234' },
+    ],
+    value: null,
+    status,
+    pending: false,
+    select,
+  }
+}
+
+function apiKeySelection(overrides: Partial<ApiKeySelection> = {}) {
+  return {
+    ...selection(),
+    apiKey: API_KEY_PLACEHOLDER,
+    ...overrides,
+  } satisfies ApiKeySelection
+}
+
+function modelSelection(overrides: Partial<ModelSelection> = {}) {
+  return {
+    ...selection(),
+    model: MODEL_PLACEHOLDER,
+    ...overrides,
+  } satisfies ModelSelection
+}
+
+function wrapperWithQueryClient() {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  }
+}
+
+function signIn() {
+  useAuthStore.getState().auth.setUser({ id: 1, username: 'alice', role: 1 })
 }
 
 describe('OpenAI compatible samples', () => {
@@ -87,6 +155,40 @@ describe('Anthropic compatible samples', () => {
   })
 })
 
+describe('credential injection', () => {
+  const credentials = { apiKey: 'sk-live-key', model: 'gpt-live' }
+
+  it.each([
+    ['python3', 'api_key="sk-live-key"', 'model="gpt-live"'],
+    ['typescript', "apiKey: 'sk-live-key'", "model: 'gpt-live'"],
+    ['curl', 'Authorization: Bearer sk-live-key', '"model": "gpt-live"'],
+  ] as const)(
+    'fills the OpenAI %s sample',
+    (lang, keyFragment, modelFragment) => {
+      const code = buildOpenAiSamples(BASE_URL, credentials)[lang]
+      expect(code).toContain(keyFragment)
+      expect(code).toContain(modelFragment)
+      expect(code).not.toContain(API_KEY_PLACEHOLDER)
+      expect(code).not.toContain(MODEL_PLACEHOLDER)
+    }
+  )
+
+  it.each([
+    ['python3', 'api_key="sk-live-key"', 'model="gpt-live"'],
+    ['typescript', "apiKey: 'sk-live-key'", "model: 'gpt-live'"],
+    ['curl', 'x-api-key: sk-live-key', '"model": "gpt-live"'],
+  ] as const)(
+    'fills the Anthropic %s sample',
+    (lang, keyFragment, modelFragment) => {
+      const code = buildAnthropicSamples(BASE_URL, credentials)[lang]
+      expect(code).toContain(keyFragment)
+      expect(code).toContain(modelFragment)
+      expect(code).not.toContain(API_KEY_PLACEHOLDER)
+      expect(code).not.toContain(MODEL_PLACEHOLDER)
+    }
+  )
+})
+
 describe('language switching', () => {
   it('defaults to Python3 and swaps the rendered sample when cURL is selected', async () => {
     const user = userEvent.setup()
@@ -121,14 +223,27 @@ describe('language switching', () => {
   })
 })
 
-describe('quick start base urls', () => {
+describe('quick start card', () => {
+  function renderCard(
+    apiKey = apiKeySelection(),
+    model = modelSelection()
+  ): Promise<ReturnType<typeof render>> {
+    return renderInRouter(
+      <QuickStartCard
+        baseUrl={BASE_URL}
+        apiKeySelection={apiKey}
+        modelSelection={model}
+      />
+    )
+  }
+
   it('offers one copyable base url per protocol', async () => {
     const user = userEvent.setup()
     const writeText = vi
       .spyOn(navigator.clipboard, 'writeText')
       .mockResolvedValue()
 
-    await renderInRouter(<QuickStartCard baseUrl={BASE_URL} />)
+    await renderCard()
 
     expect(screen.getByText('OpenAI 兼容')).toBeInTheDocument()
     expect(screen.getByText('Anthropic 兼容')).toBeInTheDocument()
@@ -144,17 +259,207 @@ describe('quick start base urls', () => {
   })
 
   it('keeps the two base urls in step order ahead of the key and model steps', async () => {
-    const { container } = await renderInRouter(
-      <QuickStartCard baseUrl={BASE_URL} />
-    )
+    const { container } = await renderCard()
 
     const texts = [...container.querySelectorAll('p')].map(
       (node) => node.textContent
     )
 
     expect(texts).toContain('第一步：填写 Base URL')
-    expect(texts).toContain('第二步：获取 API Key')
-    expect(texts).toContain('第三步：挑选模型')
+    expect(texts).toContain('第二步：选择 API Key')
+    expect(texts).toContain('第三步：选择模型')
+  })
+
+  it('reports the chosen api key option', async () => {
+    const user = userEvent.setup()
+    const select = vi.fn()
+
+    await renderCard(apiKeySelection({ select }))
+
+    await user.click(screen.getByRole('combobox', { name: 'API Key' }))
+    await user.click(screen.getByRole('option', { name: /默认密钥/ }))
+
+    expect(select).toHaveBeenCalledWith(KEY_ID)
+  })
+
+  it('reports the chosen model option', async () => {
+    const user = userEvent.setup()
+    const select = vi.fn()
+
+    await renderCard(undefined, modelSelection({ select }))
+
+    await user.click(screen.getByRole('combobox', { name: '模型' }))
+    await user.click(screen.getByRole('option', { name: /默认密钥/ }))
+
+    expect(select).toHaveBeenCalledWith(KEY_ID)
+  })
+
+  it('disables the api key select and links to the keys page when signed out', async () => {
+    await renderCard(apiKeySelection(selection('anonymous')))
+
+    const input = screen.getByRole('combobox', { name: 'API Key' })
+    expect(input).toBeDisabled()
+    expect(input).toHaveAttribute('placeholder', '登录后可选')
+    expect(
+      screen.getByRole('link', { name: '还没有密钥？前往密钥管理' })
+    ).toHaveAttribute('href', '/keys')
+  })
+
+  it('links to the model square when the model list is unavailable', async () => {
+    await renderCard(undefined, modelSelection(selection('error')))
+
+    expect(screen.getByRole('combobox', { name: '模型' })).toBeDisabled()
+    expect(
+      screen.getByRole('link', { name: '查看更多模型？前往模型广场' })
+    ).toHaveAttribute('href', '/pricing')
+  })
+
+  it('shows the key resolving hint only while pending', async () => {
+    await renderCard(apiKeySelection({ pending: true }))
+
+    expect(screen.getByText('正在读取密钥…')).toBeInTheDocument()
+  })
+})
+
+describe('protocol card placeholder hints', () => {
+  const baseProps = {
+    id: 'openai',
+    title: 'OpenAI 兼容接口',
+    endpoint: `${BASE_URL}/v1/chat/completions`,
+    auth: 'bearer',
+  } as const
+
+  it('lists both placeholders while no credential is chosen', () => {
+    const { container } = render(
+      <ProtocolCard
+        {...baseProps}
+        samples={buildOpenAiSamples(BASE_URL)}
+        credentials={{ apiKey: API_KEY_PLACEHOLDER, model: MODEL_PLACEHOLDER }}
+      />
+    )
+
+    expect(container.textContent).toContain('Authorization: Bearer')
+    expect(container.textContent).toContain(API_KEY_PLACEHOLDER)
+    expect(container.textContent).toContain('换成你的 API Key')
+    expect(container.textContent).toContain('换成模型名称')
+  })
+
+  it('drops the api key hint and shows the real key once it is chosen', () => {
+    const { container } = render(
+      <ProtocolCard
+        {...baseProps}
+        samples={buildOpenAiSamples(BASE_URL, {
+          apiKey: 'sk-live-key',
+          model: MODEL_PLACEHOLDER,
+        })}
+        credentials={{ apiKey: 'sk-live-key', model: MODEL_PLACEHOLDER }}
+      />
+    )
+
+    expect(container.textContent).toContain('Authorization: Bearer sk-live-key')
+    expect(container.textContent).not.toContain('换成你的 API Key')
+    expect(container.textContent).toContain('换成模型名称')
+    expect(container.textContent).not.toContain(API_KEY_PLACEHOLDER)
+  })
+})
+
+describe('api key selection', () => {
+  it('stays anonymous and skips the request when signed out', () => {
+    const { result } = renderHook(() => useApiKeySelection(), {
+      wrapper: wrapperWithQueryClient(),
+    })
+
+    expect(result.current.status).toBe('anonymous')
+    expect(result.current.options).toEqual([])
+    expect(getApiKeys).not.toHaveBeenCalled()
+  })
+
+  it('offers enabled keys and resolves the plaintext key on selection', async () => {
+    signIn()
+    vi.mocked(getApiKeys).mockResolvedValue({
+      success: true,
+      data: {
+        total: 2,
+        page: 1,
+        page_size: 100,
+        items: [
+          {
+            id: Number(KEY_ID),
+            name: '默认密钥',
+            key: 'ABCD********1234',
+            status: API_KEY_STATUS.ENABLED,
+          },
+          {
+            id: 8,
+            name: '已停用',
+            key: 'WXYZ********5678',
+            status: API_KEY_STATUS.DISABLED,
+          },
+        ],
+      },
+    } as unknown as Awaited<ReturnType<typeof getApiKeys>>)
+    vi.mocked(fetchTokenKey).mockResolvedValue({
+      success: true,
+      data: { key: 'real-key' },
+    })
+
+    const { result } = renderHook(() => useApiKeySelection(), {
+      wrapper: wrapperWithQueryClient(),
+    })
+
+    await act(async () => {
+      await vi.waitFor(() => expect(result.current.status).toBe('ready'))
+    })
+
+    expect(result.current.options).toEqual([
+      {
+        value: KEY_ID,
+        label: '默认密钥',
+        description: 'sk-ABCD********1234',
+      },
+    ])
+
+    await act(async () => {
+      await result.current.select(KEY_ID)
+    })
+
+    expect(fetchTokenKey).toHaveBeenCalledWith(Number(KEY_ID))
+    expect(result.current.apiKey).toBe('sk-real-key')
+    expect(result.current.pending).toBe(false)
+  })
+
+  it('falls back to the placeholder when the key cannot be read', async () => {
+    signIn()
+    vi.mocked(getApiKeys).mockResolvedValue({
+      success: true,
+      data: {
+        total: 1,
+        page: 1,
+        page_size: 100,
+        items: [
+          {
+            id: Number(KEY_ID),
+            name: '默认密钥',
+            key: 'ABCD********1234',
+            status: API_KEY_STATUS.ENABLED,
+          },
+        ],
+      },
+    } as unknown as Awaited<ReturnType<typeof getApiKeys>>)
+    vi.mocked(fetchTokenKey).mockRejectedValue(new Error('rate limited'))
+
+    const { result } = renderHook(() => useApiKeySelection(), {
+      wrapper: wrapperWithQueryClient(),
+    })
+
+    await act(async () => {
+      await vi.waitFor(() => expect(result.current.status).toBe('ready'))
+    })
+    await act(async () => {
+      await result.current.select(KEY_ID)
+    })
+
+    expect(result.current.apiKey).toBe(API_KEY_PLACEHOLDER)
   })
 })
 

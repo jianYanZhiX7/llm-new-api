@@ -16,36 +16,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import type { ComboboxInputOption } from '@/components/ui/combobox-input'
+import type { SelectionStatus } from '../types'
 
-export type Lang = 'python3' | 'typescript' | 'curl'
-
-export type CodeSamples = Record<Lang, string>
-
-export type SampleCredentials = {
-  apiKey: string
-  model: string
+type SelectionQueryState = {
+  isPending: boolean
+  isError: boolean
+  count: number
 }
 
-export type SelectionStatus =
-  | 'anonymous'
-  | 'loading'
-  | 'ready'
-  | 'empty'
-  | 'error'
-
-export type Selection = {
-  options: ComboboxInputOption[]
-  value: string | null
-  status: SelectionStatus
-  pending: boolean
-  select: (value: string) => void
-}
-
-export type ApiKeySelection = Selection & {
-  apiKey: string
-}
-
-export type ModelSelection = Selection & {
-  model: string
+export function resolveSelectionStatus({
+  isPending,
+  isError,
+  count,
+}: SelectionQueryState): SelectionStatus {
+  if (isPending) return 'loading'
+  if (isError) return 'error'
+  if (count === 0) return 'empty'
+  return 'ready'
 }
