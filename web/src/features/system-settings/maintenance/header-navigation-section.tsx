@@ -176,7 +176,7 @@ export function HeaderNavigationSection({
     },
     {
       key: 'apiHelp',
-      title: 'API 帮助文档',
+      title: '帮助文档',
       description: 'OpenAI 与 Anthropic 接口接入说明页面。',
     },
     {

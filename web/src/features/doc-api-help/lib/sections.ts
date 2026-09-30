@@ -18,19 +18,19 @@ For commercial licensing, please contact support@quantumnous.com
 */
 export const DOC_SECTION_IDS = {
   quickStart: 'quick-start',
+  protocols: 'protocols',
   openai: 'openai',
   anthropic: 'anthropic',
 } as const
 
+export type ProtocolId =
+  | typeof DOC_SECTION_IDS.openai
+  | typeof DOC_SECTION_IDS.anthropic
+
 export const QUICK_START_STEP_IDS = {
-  baseUrl: 'step-base-url',
+  interfaceType: 'step-interface-type',
   apiKey: 'step-api-key',
   model: 'step-model',
 } as const
-
-export const DOC_SECTIONS = [
-  { id: DOC_SECTION_IDS.openai, label: 'OpenAI 兼容接口' },
-  { id: DOC_SECTION_IDS.anthropic, label: 'Anthropic 兼容接口' },
-] as const
 
 export const SCROLL_ANCHOR_CLASS = 'scroll-mt-24'

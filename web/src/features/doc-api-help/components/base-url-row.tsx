@@ -16,5 +16,26 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-export const INLINE_CODE_CLASS =
-  'bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-[12px] break-all'
+import { CopyButton } from '@/components/copy-button'
+
+type BaseUrlRowProps = {
+  label: string
+  value: string
+}
+
+export function BaseUrlRow({ label, value }: BaseUrlRowProps) {
+  return (
+    <div className='flex min-w-0 items-center gap-2'>
+      <span className='text-muted-foreground shrink-0 text-xs'>{label}</span>
+      <div className='bg-muted/40 flex min-w-0 items-center gap-1 rounded-md border py-0.5 pr-0.5 pl-2'>
+        <code
+          title={value}
+          className='min-w-0 flex-1 truncate font-mono text-[11px]'
+        >
+          {value}
+        </code>
+        <CopyButton value={value} className='size-7' iconClassName='size-3.5' />
+      </div>
+    </div>
+  )
+}

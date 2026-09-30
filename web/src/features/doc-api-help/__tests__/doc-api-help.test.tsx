@@ -23,7 +23,7 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
-import { act, render, renderHook, screen } from '@testing-library/react'
+import { act, render, renderHook, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -33,8 +33,8 @@ import { API_KEY_STATUS } from '@/features/keys/constants'
 import { useAuthStore } from '@/stores/auth-store'
 
 import { CodeSampleCard } from '../components/code-sample-card'
-import { DocToc } from '../components/doc-toc'
 import { ProtocolCard } from '../components/protocol-card'
+import { ProtocolDeck } from '../components/protocol-deck'
 import { QuickStartCard } from '../components/quick-start-card'
 import {
   ANTHROPIC_VERSION,
@@ -44,8 +44,9 @@ import {
   MODEL_PLACEHOLDER,
   OPENAI_BASE_PATH,
 } from '../lib/samples'
-import { DOC_SECTIONS } from '../lib/sections'
+import { DOC_SECTION_IDS, type ProtocolId } from '../lib/sections'
 import { useApiKeySelection } from '../lib/use-api-key-options'
+import { useTypewriter } from '../lib/use-typewriter'
 import type {
   ApiKeySelection,
   ModelSelection,
@@ -254,41 +255,66 @@ describe('sample code block', () => {
 
     expect(marked).toEqual(['sk-live-key', 'gpt-live'])
   })
+
+  it('renders a partially typed credential without injecting extra glyphs', () => {
+    const partial = 'sk-li'
+    const samples = buildOpenAiSamples(BASE_URL, {
+      apiKey: partial,
+      model: MODEL_PLACEHOLDER,
+    })
+
+    const { container } = render(
+      <CodeSampleCard samples={samples} highlightTerms={[partial]} />
+    )
+
+    const pre = container.querySelector('pre')
+
+    expect(pre?.textContent).toBe(samples.python3)
+    expect(container.querySelectorAll('pre .text-success')).toHaveLength(1)
+    expect(container.textContent).toContain(`api_key="${partial}"`)
+  })
 })
 
 describe('quick start card', () => {
   function renderCard(
     apiKey = apiKeySelection(),
-    model = modelSelection()
+    model = modelSelection(),
+    activeProtocol: ProtocolId = DOC_SECTION_IDS.openai,
+    onSelectProtocol = vi.fn()
   ): Promise<ReturnType<typeof render>> {
     return renderInRouter(
       <QuickStartCard
-        baseUrl={BASE_URL}
+        activeProtocol={activeProtocol}
+        onSelectProtocol={onSelectProtocol}
         apiKeySelection={apiKey}
         modelSelection={model}
       />
     )
   }
 
-  it('offers one copyable base url per protocol', async () => {
+  it('marks the active protocol and reports the switch on click', async () => {
     const user = userEvent.setup()
-    const writeText = vi
-      .spyOn(navigator.clipboard, 'writeText')
-      .mockResolvedValue()
+    const onSelectProtocol = vi.fn()
 
-    await renderCard()
+    await renderCard(
+      undefined,
+      undefined,
+      DOC_SECTION_IDS.openai,
+      onSelectProtocol
+    )
 
-    expect(screen.getByText('OpenAI 兼容')).toBeInTheDocument()
-    expect(screen.getByText('Anthropic 兼容')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'OpenAI' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
+    expect(screen.getByRole('button', { name: 'Anthropic' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    )
 
-    const buttons = screen.getAllByRole('button', { name: 'Copy to clipboard' })
-    expect(buttons).toHaveLength(2)
+    await user.click(screen.getByRole('button', { name: 'Anthropic' }))
 
-    await user.click(buttons[0])
-    expect(writeText).toHaveBeenCalledWith(`${BASE_URL}${OPENAI_BASE_PATH}`)
-
-    await user.click(buttons[1])
-    expect(writeText).toHaveBeenCalledWith(BASE_URL)
+    expect(onSelectProtocol).toHaveBeenCalledWith(DOC_SECTION_IDS.anthropic)
   })
 
   it('lists only the step titles, without secondary copy', async () => {
@@ -299,9 +325,7 @@ describe('quick start card', () => {
     )
 
     expect(texts).toEqual([
-      '第一步：填写 Base URL',
-      'OpenAI 兼容',
-      'Anthropic 兼容',
+      '第一步：选择接口类型',
       '第二步：选择 API Key',
       '第三步：选择模型',
     ])
@@ -358,15 +382,126 @@ describe('quick start card', () => {
   })
 })
 
+describe('protocol deck', () => {
+  function layer(id: ProtocolId, text: string) {
+    return { id, content: <p>{text}</p> }
+  }
+
+  function deck(active: ProtocolId) {
+    return (
+      <ProtocolDeck
+        id={DOC_SECTION_IDS.protocols}
+        active={active}
+        layers={[
+          layer(DOC_SECTION_IDS.openai, 'openai body'),
+          layer(DOC_SECTION_IDS.anthropic, 'anthropic body'),
+        ]}
+      />
+    )
+  }
+
+  function layersOf(container: HTMLElement) {
+    const deckElement = container.querySelector(
+      `#${DOC_SECTION_IDS.protocols}`
+    ) as HTMLElement
+    return [...deckElement.children] as HTMLElement[]
+  }
+
+  it('overlaps both layers in a single grid cell', () => {
+    const { container } = render(deck(DOC_SECTION_IDS.openai))
+
+    const layers = layersOf(container)
+
+    expect(layers).toHaveLength(2)
+    for (const element of layers) {
+      expect(element.className).toContain('col-start-1')
+      expect(element.className).toContain('row-start-1')
+      expect(element.className).toContain('transition-')
+    }
+  })
+
+  it('exposes only the active layer', () => {
+    const { container } = render(deck(DOC_SECTION_IDS.openai))
+
+    const [openai, anthropic] = layersOf(container)
+
+    expect(openai).toHaveAttribute('aria-hidden', 'false')
+    expect(openai).not.toHaveAttribute('inert')
+    expect(anthropic).toHaveAttribute('aria-hidden', 'true')
+    expect(anthropic).toHaveAttribute('inert')
+  })
+
+  it('swaps the exposed layer when the active protocol changes', () => {
+    const { container, rerender } = render(deck(DOC_SECTION_IDS.openai))
+
+    rerender(deck(DOC_SECTION_IDS.anthropic))
+
+    const [openai, anthropic] = layersOf(container)
+
+    expect(openai).toHaveAttribute('aria-hidden', 'true')
+    expect(openai).toHaveAttribute('inert')
+    expect(anthropic).toHaveAttribute('aria-hidden', 'false')
+    expect(anthropic).not.toHaveAttribute('inert')
+  })
+})
+
 describe('protocol card placeholder hints', () => {
   const baseProps = {
     id: 'openai',
     title: 'OpenAI 兼容接口',
-    endpoint: `${BASE_URL}/v1/chat/completions`,
-    auth: 'bearer',
+    baseUrl: `${BASE_URL}${OPENAI_BASE_PATH}`,
   } as const
 
-  it('lists both placeholders while no credential is chosen', () => {
+  it('shows a copyable base url next to the protocol title', async () => {
+    const user = userEvent.setup()
+    const writeText = vi
+      .spyOn(navigator.clipboard, 'writeText')
+      .mockResolvedValue()
+
+    const { container } = render(
+      <>
+        <ProtocolCard
+          {...baseProps}
+          samples={buildOpenAiSamples(BASE_URL)}
+          credentials={{
+            apiKey: API_KEY_PLACEHOLDER,
+            model: MODEL_PLACEHOLDER,
+          }}
+        />
+        <ProtocolCard
+          id='anthropic'
+          title='Anthropic 兼容接口'
+          baseUrl={BASE_URL}
+          samples={buildAnthropicSamples(BASE_URL)}
+          credentials={{
+            apiKey: API_KEY_PLACEHOLDER,
+            model: MODEL_PLACEHOLDER,
+          }}
+        />
+      </>
+    )
+
+    const headerCopyButton = (id: string) =>
+      within(container.querySelector(id) as HTMLElement).getAllByRole(
+        'button',
+        {
+          name: 'Copy to clipboard',
+        }
+      )[0]
+
+    expect(
+      screen.getByText(`${BASE_URL}${OPENAI_BASE_PATH}`)
+    ).toBeInTheDocument()
+    expect(screen.getByText(BASE_URL)).toBeInTheDocument()
+
+    await user.click(headerCopyButton('#openai'))
+    expect(writeText).toHaveBeenCalledWith(`${BASE_URL}${OPENAI_BASE_PATH}`)
+
+    await user.click(headerCopyButton('#anthropic'))
+    expect(writeText).toHaveBeenCalledWith(BASE_URL)
+  })
+
+  it('leaves both placeholders inside the code sample while nothing is chosen', () => {
     const { container } = render(
       <ProtocolCard
         {...baseProps}
@@ -375,13 +510,12 @@ describe('protocol card placeholder hints', () => {
       />
     )
 
-    expect(container.textContent).toContain('Authorization: Bearer')
     expect(container.textContent).toContain(API_KEY_PLACEHOLDER)
-    expect(container.textContent).toContain('换成你的 API Key')
-    expect(container.textContent).toContain('换成模型名称')
+    expect(container.textContent).toContain(MODEL_PLACEHOLDER)
+    expect(container.textContent).not.toContain('换成')
   })
 
-  it('drops the api key hint and shows the real key once it is chosen', () => {
+  it('fills the code sample with the real key once it is chosen', () => {
     const { container } = render(
       <ProtocolCard
         {...baseProps}
@@ -393,9 +527,9 @@ describe('protocol card placeholder hints', () => {
       />
     )
 
-    expect(container.textContent).toContain('Authorization: Bearer sk-live-key')
-    expect(container.textContent).not.toContain('换成你的 API Key')
-    expect(container.textContent).toContain('换成模型名称')
+    expect(container.textContent).toContain('api_key="sk-live-key"')
+    expect(container.textContent).not.toContain(API_KEY_PLACEHOLDER)
+    expect(container.textContent).toContain(MODEL_PLACEHOLDER)
     expect(container.textContent).not.toContain(API_KEY_PLACEHOLDER)
   })
 
@@ -531,24 +665,97 @@ describe('api key selection', () => {
   })
 })
 
-describe('doc table of contents', () => {
-  it('anchors every documented section in order', () => {
-    render(<DocToc />)
+describe('credential typewriter', () => {
+  const CHOSEN_KEY = 'sk-live-key-value'
 
-    const hrefs = screen
-      .getAllByRole('link')
-      .map((link) => link.getAttribute('href'))
-
-    expect(hrefs).toEqual(DOC_SECTIONS.map((section) => `#${section.id}`))
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.restoreAllMocks()
   })
 
-  it('leaves the quick start card out of the table of contents', () => {
-    render(<DocToc />)
+  function allowMotion() {
+    vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    }))
+  }
 
-    const hrefs = screen
-      .getAllByRole('link')
-      .map((link) => link.getAttribute('href'))
+  function advance(steps: number) {
+    for (let step = 0; step < steps; step += 1) {
+      act(() => {
+        vi.advanceTimersByTime(50)
+      })
+    }
+  }
 
-    expect(hrefs).not.toContain('#quick-start')
+  it('shows the initial value in full without typing', () => {
+    const { result } = renderHook(() => useTypewriter(API_KEY_PLACEHOLDER))
+
+    expect(result.current).toBe(API_KEY_PLACEHOLDER)
+  })
+
+  it('skips the animation when the viewer prefers reduced motion', () => {
+    const { result, rerender } = renderHook(
+      ({ value }: { value: string }) => useTypewriter(value),
+      { initialProps: { value: API_KEY_PLACEHOLDER } }
+    )
+
+    rerender({ value: CHOSEN_KEY })
+
+    expect(result.current).toBe(CHOSEN_KEY)
+  })
+
+  it('reveals a newly chosen value one character at a time', () => {
+    allowMotion()
+    vi.useFakeTimers()
+
+    const { result, rerender } = renderHook(
+      ({ value }: { value: string }) => useTypewriter(value),
+      { initialProps: { value: API_KEY_PLACEHOLDER } }
+    )
+
+    rerender({ value: CHOSEN_KEY })
+    expect(result.current).toBe('')
+
+    const frames: string[] = []
+
+    for (let step = 0; step < CHOSEN_KEY.length; step += 1) {
+      advance(1)
+      frames.push(result.current)
+    }
+
+    const revealed = frames.filter(
+      (frame) => frame.length > 0 && frame.length < CHOSEN_KEY.length
+    )
+
+    expect(revealed.length).toBeGreaterThan(0)
+    expect(frames.every((frame) => CHOSEN_KEY.startsWith(frame))).toBe(true)
+    expect(result.current).toBe(CHOSEN_KEY)
+  })
+
+  it('restarts from the first character when another value is chosen mid-typing', () => {
+    allowMotion()
+    vi.useFakeTimers()
+
+    const { result, rerender } = renderHook(
+      ({ value }: { value: string }) => useTypewriter(value),
+      { initialProps: { value: API_KEY_PLACEHOLDER } }
+    )
+
+    rerender({ value: 'sk-first' })
+    advance(3)
+    expect(result.current.length).toBeGreaterThan(0)
+
+    rerender({ value: 'sk-second' })
+    expect(result.current).toBe('')
+
+    advance(20)
+    expect(result.current).toBe('sk-second')
   })
 })

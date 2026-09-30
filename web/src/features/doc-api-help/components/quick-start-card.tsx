@@ -19,15 +19,15 @@ For commercial licensing, please contact support@quantumnous.com
 import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 
-import { CopyButton } from '@/components/copy-button'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Combobox } from '@/components/ui/combobox'
 
-import { OPENAI_BASE_PATH } from '../lib/samples'
 import {
   DOC_SECTION_IDS,
   QUICK_START_STEP_IDS,
   SCROLL_ANCHOR_CLASS,
+  type ProtocolId,
 } from '../lib/sections'
 import type {
   ApiKeySelection,
@@ -35,6 +35,11 @@ import type {
   Selection,
   SelectionStatus,
 } from '../types'
+
+const INTERFACE_TYPES = [
+  { id: DOC_SECTION_IDS.openai, label: 'OpenAI' },
+  { id: DOC_SECTION_IDS.anthropic, label: 'Anthropic' },
+] as const
 
 const SELECTION_PLACEHOLDERS: Record<SelectionStatus, string> = {
   anonymous: '登录后可选',
@@ -55,23 +60,6 @@ function Step({ id, title, children }: StepProps) {
     <div id={id} className={`${SCROLL_ANCHOR_CLASS} space-y-2`}>
       <p className='text-sm font-medium'>{title}</p>
       {children}
-    </div>
-  )
-}
-
-function BaseUrlRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className='space-y-1'>
-      <p className='text-muted-foreground text-[11px]'>{label}</p>
-      <div className='bg-muted/40 flex items-center gap-1 rounded-md border py-0.5 pr-0.5 pl-2'>
-        <code
-          title={value}
-          className='min-w-0 flex-1 truncate font-mono text-[11px]'
-        >
-          {value}
-        </code>
-        <CopyButton value={value} className='size-7' iconClassName='size-3.5' />
-      </div>
     </div>
   )
 }
@@ -120,13 +108,15 @@ function SelectionField({
 }
 
 type QuickStartCardProps = {
-  baseUrl: string
+  activeProtocol: ProtocolId
+  onSelectProtocol: (id: ProtocolId) => void
   apiKeySelection: ApiKeySelection
   modelSelection: ModelSelection
 }
 
 export function QuickStartCard({
-  baseUrl,
+  activeProtocol,
+  onSelectProtocol,
   apiKeySelection,
   modelSelection,
 }: QuickStartCardProps) {
@@ -136,13 +126,26 @@ export function QuickStartCard({
         <CardTitle>快速开始</CardTitle>
       </CardHeader>
       <CardContent className='space-y-5'>
-        <Step id={QUICK_START_STEP_IDS.baseUrl} title='第一步：填写 Base URL'>
-          <div className='space-y-2'>
-            <BaseUrlRow
-              label='OpenAI 兼容'
-              value={`${baseUrl}${OPENAI_BASE_PATH}`}
-            />
-            <BaseUrlRow label='Anthropic 兼容' value={baseUrl} />
+        <Step
+          id={QUICK_START_STEP_IDS.interfaceType}
+          title='第一步：选择接口类型'
+        >
+          <div className='flex flex-wrap gap-2'>
+            {INTERFACE_TYPES.map((type) => {
+              const isActive = type.id === activeProtocol
+
+              return (
+                <Button
+                  key={type.id}
+                  variant={isActive ? 'default' : 'outline'}
+                  size='sm'
+                  aria-pressed={isActive}
+                  onClick={() => onSelectProtocol(type.id)}
+                >
+                  {type.label}
+                </Button>
+              )
+            })}
           </div>
         </Step>
 
