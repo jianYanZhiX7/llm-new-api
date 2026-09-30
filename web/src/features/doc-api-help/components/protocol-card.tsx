@@ -64,6 +64,9 @@ export function ProtocolCard({
   credentials,
 }: ProtocolCardProps) {
   const missing = missingCredentialFields(credentials)
+  const highlightTerms = [credentials.apiKey, credentials.model].filter(
+    (value) => value !== API_KEY_PLACEHOLDER && value !== MODEL_PLACEHOLDER
+  )
 
   return (
     <Card id={id} className={SCROLL_ANCHOR_CLASS}>
@@ -87,7 +90,7 @@ export function ProtocolCard({
           </code>
         </div>
 
-        <CodeSampleCard samples={samples} />
+        <CodeSampleCard samples={samples} highlightTerms={highlightTerms} />
 
         {missing.length > 0 && (
           <p className='text-muted-foreground text-xs leading-relaxed'>

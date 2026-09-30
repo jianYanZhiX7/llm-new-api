@@ -29,7 +29,6 @@ export const QUICK_START_STEP_IDS = {
 } as const
 
 export const DOC_SECTIONS = [
-  { id: DOC_SECTION_IDS.quickStart, label: '快速开始' },
   { id: DOC_SECTION_IDS.openai, label: 'OpenAI 兼容接口' },
   { id: DOC_SECTION_IDS.anthropic, label: 'Anthropic 兼容接口' },
 ] as const

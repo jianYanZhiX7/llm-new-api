@@ -223,6 +223,39 @@ describe('language switching', () => {
   })
 })
 
+describe('sample code block', () => {
+  const credentials = { apiKey: 'sk-live-key', model: 'gpt-live' }
+
+  it('renders the whole sample as uncoloured plain text by default', () => {
+    const { container } = render(
+      <CodeSampleCard samples={buildOpenAiSamples(BASE_URL)} />
+    )
+
+    const pre = container.querySelector('pre')
+
+    expect(pre?.children).toHaveLength(1)
+    expect(pre?.querySelectorAll('.text-success')).toHaveLength(0)
+    expect(container.textContent).toContain(
+      'print(completion.choices[0].message.content)'
+    )
+  })
+
+  it('colours the chosen api key and model inside the code block', () => {
+    const { container } = render(
+      <CodeSampleCard
+        samples={buildOpenAiSamples(BASE_URL, credentials)}
+        highlightTerms={['sk-live-key', 'gpt-live']}
+      />
+    )
+
+    const marked = [...container.querySelectorAll('pre .text-success')].map(
+      (node) => node.textContent
+    )
+
+    expect(marked).toEqual(['sk-live-key', 'gpt-live'])
+  })
+})
+
 describe('quick start card', () => {
   function renderCard(
     apiKey = apiKeySelection(),
@@ -258,16 +291,20 @@ describe('quick start card', () => {
     expect(writeText).toHaveBeenCalledWith(BASE_URL)
   })
 
-  it('keeps the two base urls in step order ahead of the key and model steps', async () => {
+  it('lists only the step titles, without secondary copy', async () => {
     const { container } = await renderCard()
 
     const texts = [...container.querySelectorAll('p')].map(
       (node) => node.textContent
     )
 
-    expect(texts).toContain('第一步：填写 Base URL')
-    expect(texts).toContain('第二步：选择 API Key')
-    expect(texts).toContain('第三步：选择模型')
+    expect(texts).toEqual([
+      '第一步：填写 Base URL',
+      'OpenAI 兼容',
+      'Anthropic 兼容',
+      '第二步：选择 API Key',
+      '第三步：选择模型',
+    ])
   })
 
   it('reports the chosen api key option', async () => {
@@ -360,6 +397,37 @@ describe('protocol card placeholder hints', () => {
     expect(container.textContent).not.toContain('换成你的 API Key')
     expect(container.textContent).toContain('换成模型名称')
     expect(container.textContent).not.toContain(API_KEY_PLACEHOLDER)
+  })
+
+  it('colours exactly the resolved credentials inside the code block', () => {
+    const { container } = render(
+      <ProtocolCard
+        {...baseProps}
+        samples={buildOpenAiSamples(BASE_URL, {
+          apiKey: 'sk-live-key',
+          model: 'gpt-live',
+        })}
+        credentials={{ apiKey: 'sk-live-key', model: 'gpt-live' }}
+      />
+    )
+
+    const marked = [...container.querySelectorAll('pre .text-success')].map(
+      (node) => node.textContent
+    )
+
+    expect(marked).toEqual(['sk-live-key', 'gpt-live'])
+  })
+
+  it('leaves the placeholders uncoloured while nothing is chosen', () => {
+    const { container } = render(
+      <ProtocolCard
+        {...baseProps}
+        samples={buildOpenAiSamples(BASE_URL)}
+        credentials={{ apiKey: API_KEY_PLACEHOLDER, model: MODEL_PLACEHOLDER }}
+      />
+    )
+
+    expect(container.querySelectorAll('.text-success')).toHaveLength(0)
   })
 })
 
@@ -472,5 +540,15 @@ describe('doc table of contents', () => {
       .map((link) => link.getAttribute('href'))
 
     expect(hrefs).toEqual(DOC_SECTIONS.map((section) => `#${section.id}`))
+  })
+
+  it('leaves the quick start card out of the table of contents', () => {
+    render(<DocToc />)
+
+    const hrefs = screen
+      .getAllByRole('link')
+      .map((link) => link.getAttribute('href'))
+
+    expect(hrefs).not.toContain('#quick-start')
   })
 })

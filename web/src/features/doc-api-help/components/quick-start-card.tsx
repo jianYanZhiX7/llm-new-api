@@ -47,17 +47,13 @@ const SELECTION_PLACEHOLDERS: Record<SelectionStatus, string> = {
 type StepProps = {
   id: string
   title: string
-  description: string
   children?: ReactNode
 }
 
-function Step({ id, title, description, children }: StepProps) {
+function Step({ id, title, children }: StepProps) {
   return (
     <div id={id} className={`${SCROLL_ANCHOR_CLASS} space-y-2`}>
       <p className='text-sm font-medium'>{title}</p>
-      <p className='text-muted-foreground text-xs leading-relaxed'>
-        {description}
-      </p>
       {children}
     </div>
   )
@@ -140,11 +136,7 @@ export function QuickStartCard({
         <CardTitle>快速开始</CardTitle>
       </CardHeader>
       <CardContent className='space-y-5'>
-        <Step
-          id={QUICK_START_STEP_IDS.baseUrl}
-          title='第一步：填写 Base URL'
-          description='按所用协议选择对应地址，填入 SDK 的 base_url。'
-        >
+        <Step id={QUICK_START_STEP_IDS.baseUrl} title='第一步：填写 Base URL'>
           <div className='space-y-2'>
             <BaseUrlRow
               label='OpenAI 兼容'
@@ -154,11 +146,7 @@ export function QuickStartCard({
           </div>
         </Step>
 
-        <Step
-          id={QUICK_START_STEP_IDS.apiKey}
-          title='第二步：选择 API Key'
-          description='选中后示例中的 api_key 会直接填入该密钥明文。'
-        >
+        <Step id={QUICK_START_STEP_IDS.apiKey} title='第二步：选择 API Key'>
           <SelectionField
             ariaLabel='API Key'
             selection={apiKeySelection}
@@ -167,11 +155,7 @@ export function QuickStartCard({
           />
         </Step>
 
-        <Step
-          id={QUICK_START_STEP_IDS.model}
-          title='第三步：选择模型'
-          description='选中后示例中的 model 会直接填入该模型名称。'
-        >
+        <Step id={QUICK_START_STEP_IDS.model} title='第三步：选择模型'>
           <SelectionField
             ariaLabel='模型'
             selection={modelSelection}

@@ -18,24 +18,23 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useState } from 'react'
 
-import {
-  CodeBlock,
-  CodeBlockCopyButton,
-} from '@/components/ai-elements/code-block'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 import { DEFAULT_LANG, LANG_LABELS, LANGUAGES } from '../lib/languages'
 import type { CodeSamples, Lang } from '../types'
+import { SampleCodeBlock } from './sample-code-block'
 
-const PLAIN_TEXT = 'plaintext'
-const CODE_CONTENT_CLASS = '[&_.cm-content]:pl-5!'
 const TAB_CLASS = 'h-7 px-3 text-xs data-active:text-primary!'
 
 type CodeSampleCardProps = {
   samples: CodeSamples
+  highlightTerms?: readonly string[]
 }
 
-export function CodeSampleCard({ samples }: CodeSampleCardProps) {
+export function CodeSampleCard({
+  samples,
+  highlightTerms,
+}: CodeSampleCardProps) {
   const [lang, setLang] = useState<Lang>(DEFAULT_LANG)
 
   return (
@@ -50,14 +49,7 @@ export function CodeSampleCard({ samples }: CodeSampleCardProps) {
         </TabsList>
       </Tabs>
 
-      <CodeBlock
-        className={CODE_CONTENT_CLASS}
-        code={samples[lang]}
-        language={PLAIN_TEXT}
-        title={LANG_LABELS[lang]}
-      >
-        <CodeBlockCopyButton />
-      </CodeBlock>
+      <SampleCodeBlock code={samples[lang]} highlightTerms={highlightTerms} />
     </div>
   )
 }
