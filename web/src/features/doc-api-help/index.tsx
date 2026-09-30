@@ -88,7 +88,7 @@ export function ApiHelpDocuments() {
           </div>
 
           <div className='order-1 self-start xl:sticky xl:top-20 xl:order-3'>
-            <QuickStartCard />
+            <QuickStartCard baseUrl={baseUrl} />
           </div>
         </div>
       </div>

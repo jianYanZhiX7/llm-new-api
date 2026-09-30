@@ -16,8 +16,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import type { BundledLanguage } from 'shiki'
-
 import type { Lang } from '../types'
 
 export const LANGUAGES: Lang[] = ['python3', 'typescript', 'curl']
@@ -28,10 +26,4 @@ export const LANG_LABELS: Record<Lang, string> = {
   python3: 'Python3',
   typescript: 'TypeScript',
   curl: 'cURL',
-}
-
-export const LANG_HIGHLIGHT: Record<Lang, BundledLanguage> = {
-  python3: 'python',
-  typescript: 'typescript',
-  curl: 'bash',
 }

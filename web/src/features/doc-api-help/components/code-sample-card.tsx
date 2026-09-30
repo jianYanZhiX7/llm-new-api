@@ -24,13 +24,12 @@ import {
 } from '@/components/ai-elements/code-block'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-import {
-  DEFAULT_LANG,
-  LANG_HIGHLIGHT,
-  LANG_LABELS,
-  LANGUAGES,
-} from '../lib/languages'
+import { DEFAULT_LANG, LANG_LABELS, LANGUAGES } from '../lib/languages'
 import type { CodeSamples, Lang } from '../types'
+
+const PLAIN_TEXT = 'plaintext'
+const CODE_CONTENT_CLASS = '[&_.cm-content]:pl-5!'
+const TAB_CLASS = 'h-7 px-3 text-xs data-active:text-primary!'
 
 type CodeSampleCardProps = {
   samples: CodeSamples
@@ -44,14 +43,19 @@ export function CodeSampleCard({ samples }: CodeSampleCardProps) {
       <Tabs value={lang} onValueChange={(value) => setLang(value as Lang)}>
         <TabsList className='bg-muted/40 h-8 p-0.5'>
           {LANGUAGES.map((item) => (
-            <TabsTrigger key={item} value={item} className='h-7 px-3 text-xs'>
+            <TabsTrigger key={item} value={item} className={TAB_CLASS}>
               {LANG_LABELS[item]}
             </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
 
-      <CodeBlock code={samples[lang]} language={LANG_HIGHLIGHT[lang]}>
+      <CodeBlock
+        className={CODE_CONTENT_CLASS}
+        code={samples[lang]}
+        language={PLAIN_TEXT}
+        title={LANG_LABELS[lang]}
+      >
         <CodeBlockCopyButton />
       </CodeBlock>
     </div>

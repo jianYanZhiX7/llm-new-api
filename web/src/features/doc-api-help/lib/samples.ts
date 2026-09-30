@@ -20,7 +20,8 @@ import type { CodeSamples } from '../types'
 
 export const API_KEY_PLACEHOLDER = '<YOUR_API_KEY>'
 export const MODEL_PLACEHOLDER = '<YOUR_MODEL>'
-export const OPENAI_CHAT_PATH = '/v1/chat/completions'
+export const OPENAI_BASE_PATH = '/v1'
+export const OPENAI_CHAT_PATH = `${OPENAI_BASE_PATH}/chat/completions`
 export const ANTHROPIC_MESSAGES_PATH = '/v1/messages'
 export const ANTHROPIC_VERSION = '2023-06-01'
 export const MAX_TOKENS = 1024
@@ -55,7 +56,7 @@ function openAiPython(baseUrl: string): string {
     'from openai import OpenAI',
     '',
     'client = OpenAI(',
-    `    base_url="${baseUrl}/v1",`,
+    `    base_url="${baseUrl}${OPENAI_BASE_PATH}",`,
     `    api_key="${API_KEY_PLACEHOLDER}",`,
     ')',
     '',
@@ -75,7 +76,7 @@ function openAiTypescript(baseUrl: string): string {
     "import OpenAI from 'openai'",
     '',
     'const client = new OpenAI({',
-    `  baseURL: '${baseUrl}/v1',`,
+    `  baseURL: '${baseUrl}${OPENAI_BASE_PATH}',`,
     `  apiKey: '${API_KEY_PLACEHOLDER}',`,
     '})',
     '',

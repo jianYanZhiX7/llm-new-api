@@ -16,22 +16,40 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import type { ReactNode } from 'react'
+import { describe, expect, it, vi } from 'vitest'
 
 import { CodeSampleCard } from '../components/code-sample-card'
 import { DocToc } from '../components/doc-toc'
+import { QuickStartCard } from '../components/quick-start-card'
 import {
   ANTHROPIC_VERSION,
   API_KEY_PLACEHOLDER,
   buildAnthropicSamples,
   buildOpenAiSamples,
   MODEL_PLACEHOLDER,
+  OPENAI_BASE_PATH,
 } from '../lib/samples'
 import { DOC_SECTIONS } from '../lib/sections'
 
 const BASE_URL = 'https://example.com'
+
+async function renderInRouter(ui: ReactNode) {
+  const router = createRouter({
+    routeTree: createRootRoute({ component: () => ui }),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  })
+  await router.load()
+  return render(<RouterProvider router={router} />)
+}
 
 describe('OpenAI compatible samples', () => {
   const samples = buildOpenAiSamples(BASE_URL)
@@ -87,6 +105,51 @@ describe('language switching', () => {
       `curl ${BASE_URL}/v1/chat/completions`
     )
     expect(container.textContent).not.toContain('from openai import OpenAI')
+  })
+
+  it('marks the selected language with the primary colour token', () => {
+    render(<CodeSampleCard samples={buildOpenAiSamples(BASE_URL)} />)
+
+    expect(screen.getByRole('tab', { name: 'Python3' })).toHaveClass(
+      'data-active:text-primary!'
+    )
+  })
+})
+
+describe('quick start base urls', () => {
+  it('offers one copyable base url per protocol', async () => {
+    const user = userEvent.setup()
+    const writeText = vi
+      .spyOn(navigator.clipboard, 'writeText')
+      .mockResolvedValue()
+
+    await renderInRouter(<QuickStartCard baseUrl={BASE_URL} />)
+
+    expect(screen.getByText('OpenAI 兼容')).toBeInTheDocument()
+    expect(screen.getByText('Anthropic 兼容')).toBeInTheDocument()
+
+    const buttons = screen.getAllByRole('button', { name: 'Copy to clipboard' })
+    expect(buttons).toHaveLength(2)
+
+    await user.click(buttons[0])
+    expect(writeText).toHaveBeenCalledWith(`${BASE_URL}${OPENAI_BASE_PATH}`)
+
+    await user.click(buttons[1])
+    expect(writeText).toHaveBeenCalledWith(BASE_URL)
+  })
+
+  it('keeps the two base urls in step order ahead of the key and model steps', async () => {
+    const { container } = await renderInRouter(
+      <QuickStartCard baseUrl={BASE_URL} />
+    )
+
+    const texts = [...container.querySelectorAll('p')].map(
+      (node) => node.textContent
+    )
+
+    expect(texts).toContain('第一步：填写 Base URL')
+    expect(texts).toContain('第二步：获取 API Key')
+    expect(texts).toContain('第三步：挑选模型')
   })
 })
 

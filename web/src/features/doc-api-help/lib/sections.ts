@@ -23,6 +23,7 @@ export const DOC_SECTION_IDS = {
 } as const
 
 export const QUICK_START_STEP_IDS = {
+  baseUrl: 'step-base-url',
   apiKey: 'step-api-key',
   model: 'step-model',
 } as const
