@@ -1,6 +1,10 @@
 package common
 
-import "testing"
+import (
+	"bytes"
+	"strings"
+	"testing"
+)
 
 func TestRewriteResponseModelName(t *testing.T) {
 	body := []byte(`{"id":"chatcmpl-1","model":"deepseek-v4","created":1730000000,"usage":{"prompt_tokens":11,"completion_tokens":22,"total_tokens":33}}`)
@@ -172,4 +176,93 @@ func TestRewriteResponseModelNameIgnoresEmptyTarget(t *testing.T) {
 	if got := RewriteResponseModelName(body, ""); string(got) != string(body) {
 		t.Fatalf("expected original payload for empty target, got %s", got)
 	}
+}
+
+func TestRewriteResponseModelNameSkipsErrorPayload(t *testing.T) {
+	body := []byte(`{"error":{"model":"deepseek-v4","message":"upstream rejected"},"model":"deepseek-v4"}`)
+	got := RewriteResponseModelName(body, "deepseek-chat")
+	want := `{"error":{"model":"deepseek-v4","message":"upstream rejected"},"model":"deepseek-chat"}`
+	if string(got) != want {
+		t.Fatalf("error payload rewritten: got %s want %s", got, want)
+	}
+}
+
+func TestRewriteResponseModelNameRewritesSiblingOfErrorPayload(t *testing.T) {
+	body := []byte(`{"error":{"model":"deepseek-v4"},"data":[{"model":"deepseek-v4"}]}`)
+	got := RewriteResponseModelName(body, "deepseek-chat")
+	want := `{"error":{"model":"deepseek-v4"},"data":[{"model":"deepseek-chat"}]}`
+	if string(got) != want {
+		t.Fatalf("sibling of error payload not rewritten: got %s want %s", got, want)
+	}
+}
+
+func TestRewriteResponseModelNameKeepsUnfinishedErrorPayload(t *testing.T) {
+	body := []byte(`{"model":"deepseek-v4","error":{"model":"deepseek-v4"`)
+	got := RewriteResponseModelName(body, "deepseek-chat")
+	want := `{"model":"deepseek-chat","error":{"model":"deepseek-v4"`
+	if string(got) != want {
+		t.Fatalf("unfinished error payload: got %s want %s", got, want)
+	}
+}
+
+func TestRewriteResponseModelChunkCarriesBoundaryFragments(t *testing.T) {
+	splitBodies := [][]string{
+		{`{"id":"x","mod`, `el":"deepseek-v4","created":1}`},
+		{`{"id":"x","model":"deepseek-`, `v4","created":1}`},
+		{`{"id":"x","model"`, `:"deepseek-v4","created":1}`},
+		{`{"id":"x","model":`, `"deepseek-v4","created":1}`},
+		{`{"id":"x","model":"deepseek-v4"`, `,"created":1}`},
+		{"data: {\"model\":\"deepseek-", "v4\"}\n\n"},
+		{"event: message_start\ndata: {\"message\":{\"mo", "del\":\"deepseek-v4\"}}\n\n"},
+		{`{"id":"x","erro`, `r":{"model":"deepseek-v4"}}`},
+		{`{"id":"x","erro`, `r":{"model":"deepseek-v4"},"model":"deepseek-v4"}`},
+	}
+	for _, chunks := range splitBodies {
+		joined := strings.Join(chunks, "")
+		want := string(RewriteResponseModelName([]byte(joined), "deepseek-chat"))
+		if got := rewriteThroughChunks(chunks, "deepseek-chat"); got != want {
+			t.Fatalf("chunked rewrite of %q = %q, want %q", joined, got, want)
+		}
+	}
+}
+
+func TestRewriteResponseModelChunkCarriesSplitAcrossEveryOffset(t *testing.T) {
+	body := `data: {"id":"x","error":{"model":"deepseek-v4"},"message":{"model":"deepseek-v4"}}` + "\n\n"
+	want := string(RewriteResponseModelName([]byte(body), "deepseek-chat"))
+	for offset := 1; offset < len(body)-1; offset++ {
+		chunks := []string{body[:offset], body[offset:]}
+		got := rewriteThroughChunks(chunks, "deepseek-chat")
+		if got != want {
+			t.Fatalf("split at %d = %q, want %q", offset, got, want)
+		}
+		if restored := strings.ReplaceAll(got, "deepseek-chat", "deepseek-v4"); restored != body {
+			t.Fatalf("split at %d altered unrelated bytes: %q", offset, got)
+		}
+	}
+}
+
+func TestRewriteResponseModelChunkGivesUpOversizedFragment(t *testing.T) {
+	filler := bytes.Repeat([]byte("x"), maxResponseModelHold+1)
+	body := append([]byte(`{"model":"deepseek-v4","note":"`), filler...)
+	got, hold := RewriteResponseModelChunk(body, "deepseek-chat")
+	if hold != 0 {
+		t.Fatalf("oversized fragment held: hold=%d", hold)
+	}
+	want := append([]byte(`{"model":"deepseek-chat","note":"`), filler...)
+	if !bytes.Equal(got, want) {
+		t.Fatalf("oversized fragment not rewritten: got %s", got)
+	}
+}
+
+func rewriteThroughChunks(chunks []string, model string) string {
+	var out strings.Builder
+	var pending []byte
+	for _, chunk := range chunks {
+		body := append(pending, chunk...)
+		rewritten, hold := RewriteResponseModelChunk(body, model)
+		out.Write(rewritten)
+		pending = append([]byte(nil), body[len(body)-hold:]...)
+	}
+	out.Write(pending)
+	return out.String()
 }
