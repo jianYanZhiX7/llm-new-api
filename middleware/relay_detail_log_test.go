@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
@@ -196,6 +197,29 @@ func TestRelayDetailLogChannelContextFields(t *testing.T) {
 	assert.Equal(t, 5, record.User.TokenId)
 	assert.Equal(t, "vip", record.User.Group)
 	assert.Equal(t, "gpt-4o", record.RequestedModel)
+}
+
+func TestRelayDetailLogKeepsWriteDeadlineSupport(t *testing.T) {
+	var deadlineErr error
+	router, _ := newRelayDetailLogRouter(t, func(c *gin.Context) {
+		deadlineErr = http.NewResponseController(c.Writer).SetWriteDeadline(time.Now().Add(time.Minute))
+		c.String(http.StatusOK, "ok")
+	})
+	server := httptest.NewServer(router)
+	defer server.Close()
+
+	resp, err := server.Client().Post(server.URL+"/v1/chat/completions", "application/json", strings.NewReader(`{}`))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	require.NoError(t, deadlineErr, "the recorder must not block write deadlines")
+}
+
+func TestRelayDetailResponseWriterUnwraps(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	inner := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(inner)
+	writer := &relayDetailResponseWriter{ResponseWriter: c.Writer, maxSize: 1024}
+	assert.Same(t, c.Writer, writer.Unwrap())
 }
 
 func TestUpstreamMetaAppendAndGet(t *testing.T) {

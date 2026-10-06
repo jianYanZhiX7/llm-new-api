@@ -60,6 +60,12 @@ func (w *relayDetailResponseWriter) WriteString(s string) (int, error) {
 	return w.Write([]byte(s))
 }
 
+// Unwrap exposes the wrapped writer to http.ResponseController, so that streaming
+// deadlines keep working while the recorder is installed.
+func (w *relayDetailResponseWriter) Unwrap() http.ResponseWriter {
+	return w.ResponseWriter
+}
+
 func (w *relayDetailResponseWriter) snapshot() ([]byte, bool) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
